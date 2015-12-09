@@ -2,6 +2,7 @@ import zmq
 import json
 import command
 
+
 class Communication(object):
     """
     handles communication to/from the server
@@ -11,8 +12,8 @@ class Communication(object):
         """
         initializes Communication object
         """
-        pub_socket_addr = "tcp://%s:%s"%(host_name, 5556)
-        cmd_socket_addr = "tcp://%s:%s"%(host_name, 5557)
+        pub_socket_addr = "tcp://%s:%s" % (host_name, 5556)
+        cmd_socket_addr = "tcp://%s:%s" % (host_name, 5557)
 
         self.context = zmq.Context()
         self.pub_socket = self.context.socket(zmq.SUB)
@@ -39,7 +40,7 @@ class Communication(object):
         self.cmd_socket.send(message)
         reply = self.receive(Communication.Origin.CommandSocket)
 
-        if key == None:
+        if key is None:
             return reply
         else:
             return json.loads(reply)[key]
@@ -64,7 +65,7 @@ class Communication(object):
             try:
                 reply = self.pub_socket.recv(zmq.NOBLOCK)
                 try:
-                    if(json.loads(reply)[command.Command.COMM_TYPE] == command.Command.MATCH_END):
+                    if json.loads(reply)[command.Command.COMM_TYPE] == command.Command.MATCH_END:
                         return True
                 except ValueError:
                     continue
@@ -81,5 +82,8 @@ class Communication(object):
         self.pub_socket.close()
 
     class Origin:
+        def __init__(self):
+            pass
+
         PublishSocket = 0
         CommandSocket = 1

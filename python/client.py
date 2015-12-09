@@ -1,13 +1,14 @@
-import sys
 import optparse
 import gameinfo
 import command
 import communication
 
+
 class Client(object):
     """
     The main client class. Responsible for running the game.
     """
+
     def __init__(self):
 
         """
@@ -15,10 +16,10 @@ class Client(object):
         """
 
         parser = optparse.OptionParser()
-        parser.add_option('-t', help = 'specifies the team name', dest = 'team_name')
-        parser.add_option('-p', help = 'specifies the teams password', dest = 'team_password')
-        parser.add_option('-m', help = 'specifies the match token', dest='match_token')
-        parser.add_option('-n', help = 'specifies the host name', dest='host_name')
+        parser.add_option('-t', help='specifies the team name', dest='team_name')
+        parser.add_option('-p', help='specifies the teams password', dest='team_password')
+        parser.add_option('-m', help='specifies the match token', dest='match_token')
+        parser.add_option('-n', help='specifies the host name', dest='host_name')
 
         global opts
         (opts, args) = parser.parse_args()
@@ -42,10 +43,10 @@ class Client(object):
             print "host name is mandatory"
             parser.print_help()
             exit(1)
-            
+
         self.game_info = gameinfo.GameInfo(opts.team_name, opts.match_token, opts.team_password)
         self.cmd = command.Command()
-        self.comm = communication.Communication(opts.host_name) 
+        self.comm = communication.Communication(opts.host_name)
 
     def run(self):
         """
@@ -53,7 +54,8 @@ class Client(object):
         """
         print "Starting Battle Tanks Client..."
 
-        connect_command = self.cmd.getMatchConnectCommand(self.game_info.team_name, self.game_info.match_token, self.game_info.team_password)
+        connect_command = self.cmd.get_match_connect_command(self.game_info.team_name, self.game_info.match_token,
+                                                             self.game_info.team_password)
 
         print 'Connecting to server...'
         self.comm.set_subscription(opts.match_token)
@@ -74,6 +76,7 @@ class Client(object):
         cleanup and exit
         """
         self.comm.close()
+
 
 if __name__ == "__main__":
     client = Client()
