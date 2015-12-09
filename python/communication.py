@@ -36,7 +36,6 @@ class Communication(object):
         extracts and returns 'key' from the servers reply
         if no 'key' specified, returns the entire reply
         """
-        reply = None
         self.cmd_socket.send(message)
         reply = self.receive(Communication.Origin.CommandSocket)
 

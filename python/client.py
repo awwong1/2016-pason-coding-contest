@@ -2,6 +2,7 @@ import optparse
 import gameinfo
 import command
 import communication
+import json
 
 
 class Client(object):
@@ -10,7 +11,6 @@ class Client(object):
     """
 
     def __init__(self):
-
         """
         Constructor
         """
@@ -64,9 +64,37 @@ class Client(object):
         print 'Received client token... %s' % self.game_info.client_token
         print 'Starting game...'
 
-        #
-        print 'No algorithm detected'
-        #
+        while True:
+            raw_state_message = self.comm.receive(self.comm.Origin.PublishSocket)
+            try:
+                json_state_message = json.loads(raw_state_message)
+                if json_state_message[self.cmd.COMM_TYPE] == 'GAME_START':
+                    print "Game Name: %s" % json_state_message['game_name']
+                    print "Timestamp: %s" % json_state_message['timestamp']
+                    print "Game Number: %s out of %s" % (json_state_message['game_num'], json_state_message ['game_count'])
+                    continue
+                if json_state_message[self.cmd.COMM_TYPE] == 'GAME_END':
+                    print "Game Ended! Moving onto the next game..."
+                    continue
+                if json_state_message[self.cmd.COMM_TYPE] == 'MatchEnd':
+                    print "Match Ended!"
+                    break
+                if json_state_message[self.cmd.COMM_TYPE] == 'GAMESTATE':
+                    """
+                    comm_type String The message type to indicate that this is a game state message.
+                    timeRemaining Number The amount of time, in seconds, remaining in the game.
+                    timestamp Number The current time, in milliseconds, that this state was generated.
+                    map Object Describes the various attributes about the game map. More information is provided below.
+                    players Array of Objects
+                    Describes various attributes about the players in the game. More information is provided below.
+                    """
+                    # TODO: Fancy pro battle tank algorithm goes here
+                    print json_state_message
+            except ValueError:
+                # Not valid json, this must the match token string
+                self.game_info.match_token = raw_state_message
+                print "Match Token: %s" % raw_state_message
+                continue
 
         print 'Exiting...'
         exit()
