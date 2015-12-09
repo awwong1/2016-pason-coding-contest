@@ -10,6 +10,8 @@ Team Members:
 * Stephen Kalen Romansky
 
 ## License
+The MIT License (MIT)
+
 Copyright (c) 2015 Alexander Wong, Stephen Kalen Romansky
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
