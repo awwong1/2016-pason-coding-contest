@@ -131,3 +131,8 @@ class CommType(object):
     TURRET_ROTATE = 'ROTATE_TURRET'
     FIRE = 'FIRE'
     STOP = 'STOP'
+
+    GAME_START = 'GAME_START'
+    GAME_END = 'GAME_END'
+    GAME_STATE = 'GAMESTATE'
+    MATCH_END = 'MatchEnd'

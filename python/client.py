@@ -4,6 +4,8 @@ import command
 import communication
 import json
 
+from algorithm import Algorithm
+
 
 class Client(object):
     """
@@ -65,21 +67,11 @@ class Client(object):
         print 'Starting game...'
 
         while True:
+            algo = Algorithm(self.game_info.team_name)
             raw_state_message = self.comm.receive(self.comm.Origin.PublishSocket)
             try:
                 json_state_message = json.loads(raw_state_message)
-                if json_state_message[self.cmd.COMM_TYPE] == 'GAME_START':
-                    print "Game Name: %s" % json_state_message['game_name']
-                    print "Timestamp: %s" % json_state_message['timestamp']
-                    print "Game Number: %s out of %s" % (json_state_message['game_num'], json_state_message ['game_count'])
-                    continue
-                if json_state_message[self.cmd.COMM_TYPE] == 'GAME_END':
-                    print "Game Ended! Moving onto the next game..."
-                    continue
-                if json_state_message[self.cmd.COMM_TYPE] == 'MatchEnd':
-                    print "Match Ended!"
-                    break
-                if json_state_message[self.cmd.COMM_TYPE] == 'GAMESTATE':
+                if json_state_message[self.cmd.COMM_TYPE] == command.CommType.GAME_STATE:
                     """
                     comm_type String The message type to indicate that this is a game state message.
                     timeRemaining Number The amount of time, in seconds, remaining in the game.
@@ -88,8 +80,25 @@ class Client(object):
                     players Array of Objects
                     Describes various attributes about the players in the game. More information is provided below.
                     """
-                    # TODO: Fancy pro battle tank algorithm goes here
+                    actions = algo.analyze_and_compute_game_state(json_state_message)
+                    for action in actions:
+                        self.comm.send(action)
+                    continue
+                elif json_state_message[self.cmd.COMM_TYPE] == command.CommType.GAME_START:
+                    print "Game Name: %s" % json_state_message['game_name']
+                    print "Timestamp: %s" % json_state_message['timestamp']
+                    print "Game Number: %s out of %s" % (json_state_message['game_num'], json_state_message ['game_count'])
+                    continue
+                elif json_state_message[self.cmd.COMM_TYPE] == command.CommType.GAME_END:
+                    print "Game Ended! Moving onto the next game..."
+                    continue
+                elif json_state_message[self.cmd.COMM_TYPE] == command.CommType.MATCH_END:
+                    print "Match Ended!"
+                    break
+                else:
+                    print "Something went wrong. No valid comm_type in server response but response is valid json!"
                     print json_state_message
+                    continue
             except ValueError:
                 # Not valid json, this must the match token string
                 self.game_info.match_token = raw_state_message
