@@ -67,22 +67,29 @@ class Client(object):
         print 'Starting game...'
 
         while True:
-            algo = Algorithm(self.game_info.team_name)
+            algo = Algorithm(self.game_info.team_name, self.game_info.client_token)
             raw_state_message = self.comm.receive(self.comm.Origin.PublishSocket)
             try:
                 json_state_message = json.loads(raw_state_message)
                 if json_state_message[self.cmd.COMM_TYPE] == command.CommType.GAME_STATE:
-                    """
-                    comm_type String The message type to indicate that this is a game state message.
-                    timeRemaining Number The amount of time, in seconds, remaining in the game.
-                    timestamp Number The current time, in milliseconds, that this state was generated.
-                    map Object Describes the various attributes about the game map. More information is provided below.
-                    players Array of Objects
-                    Describes various attributes about the players in the game. More information is provided below.
-                    """
-                    actions = algo.analyze_and_compute_game_state(json_state_message)
+                    algo.parse_game_state(json_state_message)
+                    actions = algo.generate_actions()
                     for action in actions:
                         self.comm.send(action)
+                        """
+                        # This never seemed to work, but actions performed fine
+                        raw_command_message = self.comm.receive(self.comm.Origin.CommandSocket)
+                        try:
+                            json_command_message = json.loads(raw_command_message)
+                            if json_command_message['resp'] == 'ok':
+                                continue
+                            else:
+                                print "Command did not execute properly!"
+                                print raw_command_message
+                        except Exception:
+                            print "Command did not return valid JSON message!"
+                            print raw_command_message
+                        """
                     continue
                 elif json_state_message[self.cmd.COMM_TYPE] == command.CommType.GAME_START:
                     print "Game Name: %s" % json_state_message['game_name']
@@ -102,7 +109,6 @@ class Client(object):
             except ValueError:
                 # Not valid json, this must the match token string
                 self.game_info.match_token = raw_state_message
-                print "Match Token: %s" % raw_state_message
                 continue
 
         print 'Exiting...'
