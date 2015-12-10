@@ -83,20 +83,28 @@ class Tank:
         else:
             return 1
 
-    def get_closest_tank(self, tanks):
+    def get_all_dist_tank(self, tanks):
+        """
+        Given the list of tanks as a parameter, return a list of (dist, tank) tuples sorted by distance increasing
+        :param tanks: List of tanks
+        :return: [(Distance, Tank)]. Empty array if no tanks
+        """
+        dists_and_tanks = []
+        for tank in tanks:
+            dist = math.hypot(tank.position[0] - self.position[0], tank.position[1] - self.position[1])
+            dists_and_tanks.append((dist, tank))
+        return sorted(dists_and_tanks)
+
+    def get_closest_dist_tank(self, tanks):
         """
         Given the list of tanks as a parameter, return the closest enemy tank.
         :param tanks: List of tanks
         :return: Distance, Tank. None if no tanks.
         """
-        min_dist = float('inf')
-        closest_tank = None
-        for tank in tanks:
-            dist = math.hypot(tank.position[0] - self.position[0], tank.position[1] - self.position[1])
-            if dist < min_dist:
-                min_dist = dist
-                closest_tank = tank
-        return min_dist, closest_tank
+        dist_tanks = self.get_all_dist_tank(tanks)
+        if dist_tanks:
+            return dist_tanks[0]
+        return None
 
     def get_rads_to_tank(self, tank):
         """
@@ -109,9 +117,17 @@ class Tank:
         y = tank.position[1] - self.position[1]
         return math.atan2(y, x)
 
-    def get_point_turret_to_tank(self, tank):
+    def get_direction_rotation_track_to_point(self, x, y):
         """
-        Given the tank to point the turret at, get the command for pointing this turret to that thank
+        Given the x and y value to point the track at, get the command for pointing this track to that x and y
+        :param x: x value to point tank to
+        :param y: y value to point tank to
+        """
+        return self.get_direction_rotation_track_to_tank(Tank('stub', 0, 0, 0, 'stub', [x, y], 0, 0, 0, []))
+
+    def get_direction_rotation_turret_to_tank(self, tank):
+        """
+        Given the tank to point the turret at, get the command for pointing this turret to that tank
         :param tank: Tank to point turret at
         """
         raw_rads = self.get_rads_to_tank(tank)
@@ -131,9 +147,9 @@ class Tank:
             else:
                 return 'CW', rotation
 
-    def get_point_track_to_tank(self, tank):
+    def get_direction_rotation_track_to_tank(self, tank):
         """
-        Given the tank to point the turret at, get the command for pointing this track to that thank
+        Given the tank to point the track at, get the command for pointing this track to that tank
         :param tank: Tank to point track at
         """
         raw_rads = self.get_rads_to_tank(tank)

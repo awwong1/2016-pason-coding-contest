@@ -76,9 +76,9 @@ class Algorithm:
 
         # let's do this the dumbest way possible, all at once
         for my_tank in my_player.tanks:
-            dist, tank = my_tank.get_closest_tank(enemy_player.tanks)
-            tur_dir, tur_rad = my_tank.get_point_turret_to_tank(tank)
-            tra_dir, tra_rad = my_tank.get_point_track_to_tank(tank)
+            dist, tank = my_tank.get_closest_dist_tank(enemy_player.tanks)
+            tur_dir, tur_rad = my_tank.get_direction_rotation_turret_to_tank(tank)
+            tra_dir, tra_rad = my_tank.get_direction_rotation_track_to_tank(tank)
             actions.append(Command.get_turret_rotation_command(my_tank.id, tur_dir, tur_rad, self.client_token))
             actions.append(Command.get_tank_rotation_command(my_tank.id, tra_dir, tra_rad, self.client_token))
             actions.append(Command.get_movement_command(my_tank.id, 'FWD', dist, self.client_token))

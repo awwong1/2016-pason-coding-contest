@@ -89,6 +89,18 @@ class TestAlgorithm(unittest.TestCase):
         self.assertEquals(str(algo.players), str(players))
         self.assertEquals(algo.players, players)
 
+    def test_get_tank_distances(self):
+        tank_1 = Tank('tank_1', 100.0, 2.0, 2.0, 'TankFast', [0, 0], 0.0, 0.0, 10.0, [])
+        tank_2 = Tank('tank_2', 100.0, 2.0, 2.0, 'TankFast', [100, 100], 0.0, 0.0, 10.0, [])
+        tank_3 = Tank('tank_3', 100.0, 2.0, 2.0, 'TankFast', [200, 200], 0.0, 0.0, 10.0, [])
+        tank_4 = Tank('tank_4', 100.0, 2.0, 2.0, 'TankFast', [300, 300], 0.0, 0.0, 10.0, [])
+        test_target_tanks = [tank_1, tank_2, tank_3, tank_4]
+
+        origin_tank = Tank('origin_tank', 100.0, 2.0, 2.0, 'TankFast', [-1, -1], 0.0, 0.0, 10.0, [])
+        self.assertEquals(origin_tank.get_all_dist_tank(test_target_tanks),
+                          [(1.4142135623730951, tank_1), (142.8355697996826, tank_2), (284.2569260369921, tank_3),
+                           (425.67828227430164, tank_4)])
+
     def test_get_closest_tank(self):
         tank_1 = Tank('tank_1', 100.0, 2.0, 2.0, 'TankFast', [0, 0], 0.0, 0.0, 10.0, [])
         tank_2 = Tank('tank_2', 100.0, 2.0, 2.0, 'TankFast', [100, 100], 0.0, 0.0, 10.0, [])
@@ -97,19 +109,19 @@ class TestAlgorithm(unittest.TestCase):
         test_target_tanks = [tank_1, tank_2, tank_3, tank_4]
 
         origin_tank = Tank('origin_tank', 100.0, 2.0, 2.0, 'TankFast', [-1, -1], 0.0, 0.0, 10.0, [])
-        closet_tank = origin_tank.get_closest_tank(test_target_tanks)
+        closet_tank = origin_tank.get_closest_dist_tank(test_target_tanks)
         self.assertEquals(closet_tank, (1.4142135623730951, tank_1))
 
         origin_tank = Tank('origin_tank', 100.0, 2.0, 2.0, 'TankFast', [210, 190], 0.0, 0.0, 10.0, [])
-        closet_tank = origin_tank.get_closest_tank(test_target_tanks)
+        closet_tank = origin_tank.get_closest_dist_tank(test_target_tanks)
         self.assertEquals(closet_tank, (14.142135623730951, tank_3))
 
         origin_tank = Tank('origin_tank', 100.0, 2.0, 2.0, 'TankFast', [100, 100], 0.0, 0.0, 10.0, [])
-        closet_tank = origin_tank.get_closest_tank(test_target_tanks)
+        closet_tank = origin_tank.get_closest_dist_tank(test_target_tanks)
         self.assertEquals(closet_tank, (0.0, tank_2))
 
         origin_tank = Tank('origin_tank', 100.0, 2.0, 2.0, 'TankFast', [999, 999], 0.0, 0.0, 10.0, [])
-        closet_tank = origin_tank.get_closest_tank(test_target_tanks)
+        closet_tank = origin_tank.get_closest_dist_tank(test_target_tanks)
         self.assertEquals(closet_tank, (988.5352800987935, tank_4))
 
     def test_get_radians_to_tank(self):
@@ -124,9 +136,17 @@ class TestAlgorithm(unittest.TestCase):
         tank_1 = Tank('tank_1', 100.0, 2.0, 2.0, 'TankFast', [0, 0], 0.0, 0.0, 10.0, [])
         tank_2 = Tank('tank_2', 100.0, 2.0, 2.0, 'TankFast', [100, 100], 0.0, 0.0, 10.0, [])
         # 45 degrees CCW
-        self.assertEquals(tank_1.get_point_track_to_tank(tank_2), ('CCW', 0.7853981633974483))
+        self.assertEquals(tank_1.get_direction_rotation_track_to_tank(tank_2), ('CCW', 0.7853981633974483))
         # 135 degrees CW
-        self.assertEquals(tank_2.get_point_track_to_tank(tank_1), ('CW', 2.356194490192345))
+        self.assertEquals(tank_2.get_direction_rotation_track_to_tank(tank_1), ('CW', 2.356194490192345))
+
+    def test_get_point_turret_to_tank(self):
+        tank_1 = Tank('tank_1', 100.0, 2.0, 2.0, 'TankFast', [0, 0], 0.0, 0.0, 10.0, [])
+        tank_2 = Tank('tank_2', 100.0, 2.0, 2.0, 'TankFast', [100, 100], 0.0, 0.0, 10.0, [])
+        # 45 degrees CCW
+        self.assertEquals(tank_1.get_direction_rotation_turret_to_tank(tank_2), ('CCW', 0.7853981633974483))
+        # 135 degrees CW
+        self.assertEquals(tank_2.get_direction_rotation_turret_to_tank(tank_1), ('CW', 2.356194490192345))
 
 
 if __name__ == '__main__':
