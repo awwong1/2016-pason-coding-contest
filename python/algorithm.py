@@ -82,5 +82,6 @@ class Algorithm:
             actions.append(Command.get_turret_rotation_command(my_tank.id, tur_dir, tur_rad, self.client_token))
             actions.append(Command.get_tank_rotation_command(my_tank.id, tra_dir, tra_rad, self.client_token))
             actions.append(Command.get_movement_command(my_tank.id, 'FWD', dist, self.client_token))
-            actions.append(Command.get_fire_command(my_tank.id, self.client_token))
+            if (my_tank.no_friendly_fire(my_player.tanks, dist, tank)):
+                actions.append(Command.get_fire_command(my_tank.id, self.client_token))
         return actions
