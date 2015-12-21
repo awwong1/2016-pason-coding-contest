@@ -183,7 +183,7 @@ class Tank:
         b = self.position[1] - enemy_tank.position[1]
         c = a * self.position[1] + self.position[0] * b
         for tank in tanks:
-            if (self == tank):
+            if (self.id == tank.id):
                 continue # cannot shoot self
             rs = self.get_rads_to_tank(tank)
             # check if shooting at enemy_tank hits any allies hit circles
