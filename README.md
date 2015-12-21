@@ -1,6 +1,14 @@
 # Pason Coding Contest
 Entry for the January 2016 Pason Coding Contest.
 
+## Todo List
+* Conversion of map into grid
+* Implementation of pathfinding from tank to point/tank
+* Move queue for tanks to follow path through algorithm
+* Tanks move just out of (within?) firing range of enemy tanks before firing
+* Optional, tank pairing?
+* Optional, handling of Sudden Death mode? (move to center while walls close in)
+
 ## Links
 * Specifications: [https://codingcontest.pason.com/static/common/pdf/BattleTanks-1.1.3.pdf](https://codingcontest.pason.com/static/common/pdf/BattleTanks-1.1.3.pdf)
 * Contest Site Details: [https://codingcontest.pason.com](https://codingcontest.pason.com)
