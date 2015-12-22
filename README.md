@@ -4,6 +4,9 @@ Entry for the January 2016 Pason Coding Contest.
 ## Todo List
 * Conversion of map into grid
 - see Game State - Map object -- has game board description using integer values for board and objects on board
+https://en.wikipedia.org/wiki/Euclidean_shortest_path shortest path wrt the real grid
+https://users.cs.duke.edu/~reif/paper/storer/shotestpathplane.pdf # we could be really lazy and see if there is an obstacle in the way, go to the left or right
+side of it.
 
 * Implementation of pathfinding from tank to point/tank
 - if we want to move in the 8 squares around the tank -- just fix the radians to those location with the tracks on the tank
