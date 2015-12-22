@@ -1,4 +1,5 @@
 from command import Command
+from command import CommType
 from game_objects.map import Map
 from game_objects.obstacle import Obstacle
 from game_objects.player import Player
@@ -76,6 +77,8 @@ class Algorithm:
 
         # let's do this the dumbest way possible, all at once
         for my_tank in my_player.tanks:
+            if (enemy_player is None) or (enemy_player.tanks is None):
+                break # I had an error NoneType not iterable on `dist, tank = my_tank.get_closest_dist_tank(enemy_player.tanks)` in one run.
             dist, tank = my_tank.get_closest_dist_tank(enemy_player.tanks)
             tur_dir, tur_rad = my_tank.get_direction_rotation_turret_to_tank(tank)
             tra_dir, tra_rad = my_tank.get_direction_rotation_track_to_tank(tank)
@@ -84,4 +87,6 @@ class Algorithm:
             actions.append(Command.get_movement_command(my_tank.id, 'FWD', dist, self.client_token))
             if my_tank.no_friendly_fire(my_player.tanks, dist, tank):
                 actions.append(Command.get_fire_command(my_tank.id, self.client_token))
+            else:
+                actions.append(Command.get_stop_command(my_tank.id, CommType.FIRE, self.client_token)) # don't shoot friend from queued bullet
         return actions
