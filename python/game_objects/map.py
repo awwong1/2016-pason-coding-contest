@@ -1,3 +1,7 @@
+import numpy
+from heapq import heappop, heappush
+
+
 class Map:
     """
     Map origin (0, 0) is bottom left
@@ -13,6 +17,7 @@ class Map:
     """
     size = []
     obstacles = []
+    col_grid = numpy.array([])
     grid = []
 
     def __init__(self, size, obstacles):
@@ -21,6 +26,7 @@ class Map:
 
         # Create the grid for pathfinding purposes.
         # NOTE: If any obstacles overlap, later obstacles will overwrite newer obstacles.
+        self.col_grid = numpy.array([[0 for y in range(size[1])] for x in range(size[0])])
         self.grid = [[0 for y in range(size[1])] for x in range(size[0])]
         for obstacle in obstacles:
             raw_terrain_type = obstacle.type
@@ -39,6 +45,7 @@ class Map:
             for writer_x in xrange(0, size_x):
                 for writer_y in xrange(0, size_y):
                     try:
+                        self.col_grid[origin_x + writer_x][origin_y + writer_y] = 1
                         self.grid[origin_x + writer_x][origin_y + writer_y] = terrain_type
                     except IndexError:
                         # Obstacles seem to be able to extend past the map
@@ -76,3 +83,65 @@ class Map:
         for row in zip(*zip(*zip(*self.grid[::-1])[::-1])[::-1]):
             v_grid += "".join(map(str, row)) + "\n"
         return v_grid
+
+    @staticmethod
+    def _heuristic(a, b):
+        """
+        Heuristic for a-star algorithm
+        """
+        return (b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2
+
+    def get_shortest_path(self, start, goal):
+        """
+        Modified version of astar for our implementation of the map.
+        Taken from: Christian Careaga (christian.careaga7@gmail.com) at
+        http://code.activestate.com/recipes/578919-python-a-pathfinding-with-binary-heap/
+        :param start (2-tuple), Integers (x,y) starting position of path
+        :param goal  (2-tuple), Integers (x,y) ending position of path
+        :return array, empty array if no path. Otherwise every node as (x,y) in path from start to goal.
+        """
+        neighbors = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]
+
+        close_set = set()
+        came_from = {}
+        gscore = {start: 0}
+        fscore = {start: Map._heuristic(start, goal)}
+        oheap = []
+
+        heappush(oheap, (fscore[start], start))
+
+        while oheap:
+            current = heappop(oheap)[1]
+
+            if current == goal:
+                data = []
+                while current in came_from:
+                    data.append(current)
+                    current = came_from[current]
+                data.reverse()
+                return data
+
+            close_set.add(current)
+            for i, j in neighbors:
+                neighbor = current[0] + i, current[1] + j
+                tentative_g_score = gscore[current] + Map._heuristic(current, neighbor)
+                if 0 <= neighbor[0] < self.col_grid.shape[0]:
+                    if 0 <= neighbor[1] < self.col_grid.shape[1]:
+                        if self.col_grid[neighbor[0]][neighbor[1]] == 1:
+                            continue
+                    else:
+                        # array bound y walls
+                        continue
+                else:
+                    # array bound x walls
+                    continue
+
+                if neighbor in close_set and tentative_g_score >= gscore.get(neighbor, 0):
+                    continue
+                if tentative_g_score < gscore.get(neighbor, 0) or neighbor not in [i[1] for i in oheap]:
+                    came_from[neighbor] = current
+                    gscore[neighbor] = tentative_g_score
+                    fscore[neighbor] = tentative_g_score + Map._heuristic(neighbor, goal)
+                    heappush(oheap, (fscore[neighbor], neighbor))
+
+        return []
