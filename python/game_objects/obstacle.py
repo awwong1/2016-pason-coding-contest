@@ -4,7 +4,7 @@ class Obstacle:
     obs_type (String)
     * Describes the type of terrain object it is (i.e SOLID or IMPASSABLE).
     corner (Integer Array)
-    * The coordinates, in metres, of the corner of the terrain closest to the map origin.
+    * The coordinates, in metres, of the corner of the terrain closest to the map origin. (Bottom left)
     size (Integer Array)
     * The width and height, in metres, of the terrain object (in that order).
     """

@@ -148,6 +148,71 @@ class TestAlgorithm(unittest.TestCase):
         # 135 degrees CW
         self.assertEquals(tank_2.get_direction_rotation_turret_to_tank(tank_1), ('CW', 2.356194490192345))
 
+    def test_map_grid_creation(self):
+        t_map = Map((10, 75), [])
+        self.assertEqual(len(t_map.grid), 10)  # X values
+        self.assertEqual(len(t_map.grid[0]), 75)  # Y values
+
+        t_map = Map(
+            (10, 50), [
+                Obstacle('SOLID', [1, 1], [3, 5]),        # Start at map (1, 1), 3 wide 5 tall
+                Obstacle('IMPASSABLE', [4, 6], [6, 20]),  # Start at map (4, 6), 6 wide 20 tall
+                Obstacle('NORMAL', [0, 4], [10, 10]),     # Ignore this, Normal obstacles are 0
+                Obstacle('SOLID', [0, 40], [30, 1])       # Start at map (0, 20), 30 wide 1 tall (test oob objects)
+            ]
+        )
+        ref_v_map = "0000000000\n" + \
+                    "0000000000\n" + \
+                    "0000000000\n" + \
+                    "0000000000\n" + \
+                    "0000000000\n" + \
+                    "0000000000\n" + \
+                    "0000000000\n" + \
+                    "0000000000\n" + \
+                    "0000000000\n" + \
+                    "2222222222\n" + \
+                    "0000000000\n" + \
+                    "0000000000\n" + \
+                    "0000000000\n" + \
+                    "0000000000\n" + \
+                    "0000000000\n" + \
+                    "0000000000\n" + \
+                    "0000000000\n" + \
+                    "0000000000\n" + \
+                    "0000000000\n" + \
+                    "0000000000\n" + \
+                    "0000000000\n" + \
+                    "0000000000\n" + \
+                    "0000000000\n" + \
+                    "0000000000\n" + \
+                    "0000111111\n" + \
+                    "0000111111\n" + \
+                    "0000111111\n" + \
+                    "0000111111\n" + \
+                    "0000111111\n" + \
+                    "0000111111\n" + \
+                    "0000111111\n" + \
+                    "0000111111\n" + \
+                    "0000111111\n" + \
+                    "0000111111\n" + \
+                    "0000111111\n" + \
+                    "0000111111\n" + \
+                    "0000111111\n" + \
+                    "0000111111\n" + \
+                    "0000111111\n" + \
+                    "0000111111\n" + \
+                    "0000111111\n" + \
+                    "0000111111\n" + \
+                    "0000111111\n" + \
+                    "0000111111\n" + \
+                    "0222000000\n" + \
+                    "0222000000\n" + \
+                    "0222000000\n" + \
+                    "0222000000\n" + \
+                    "0222000000\n" + \
+                    "0000000000\n"
+        self.assertEquals(t_map.get_grid_display(), ref_v_map)
+
 
 if __name__ == '__main__':
     unittest.main()

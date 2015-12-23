@@ -92,9 +92,10 @@ class Tank:
         :return: [(Distance, Tank)]. Empty array if no tanks
         """
         dists_and_tanks = []
-        for tank in tanks:
-            dist = math.hypot(tank.position[0] - self.position[0], tank.position[1] - self.position[1])
-            dists_and_tanks.append((dist, tank))
+        if tanks:
+            for tank in tanks:
+                dist = math.hypot(tank.position[0] - self.position[0], tank.position[1] - self.position[1])
+                dists_and_tanks.append((dist, tank))
         return sorted(dists_and_tanks)
 
     def get_closest_dist_tank(self, tanks):

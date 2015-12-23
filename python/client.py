@@ -77,9 +77,10 @@ class Client(object):
                     for action in actions:
                         self.comm.send(action)
                         """
-                        # This never seemed to work, but actions performed fine
-                        raw_command_message = self.comm.receive(self.comm.Origin.CommandSocket)
+                        # Debugging purposes
+                        raw_command_message = ""
                         try:
+                            raw_command_message = self.comm.receive(self.comm.Origin.CommandSocket)
                             json_command_message = json.loads(raw_command_message)
                             if json_command_message['resp'] == 'ok':
                                 continue
