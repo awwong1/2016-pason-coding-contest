@@ -217,10 +217,7 @@ class TestAlgorithm(unittest.TestCase):
 
     def test_map_pathfinding(self):
         pathmap = Map((10, 10), [])
-        self.assertEquals(
-            [(1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6), (7, 7), (8, 8), (9, 9)],
-            pathmap.get_shortest_path((0, 0), (9, 9))
-        )
+        self.assertEquals([(9, 9)], pathmap.get_shortest_path((0, 0), (9, 9)))
         pathmap = Map((10, 5), [
             Obstacle('SOLID', (0, 1), (9, 1)),
             Obstacle('IMPASSABLE', (1, 3), (9, 1))
@@ -232,11 +229,19 @@ class TestAlgorithm(unittest.TestCase):
                 "0000000000\n"
         self.assertEquals(pathmap.get_grid_display(), v_map)
         self.assertEquals(
-            [(1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (9, 1), (8, 2), (7, 2), (6, 2), (5, 2),
-             (4, 2), (3, 2), (2, 2), (1, 2), (0, 3), (1, 4), (2, 4), (3, 4), (4, 4), (5, 4), (6, 4), (7, 4), (8, 4),
-             (9, 4)],
+            [(8, 0), (9, 1), (8, 2), (1, 2), (0, 3), (1, 4), (9, 4)],
             pathmap.get_shortest_path((0, 0), (9, 4))
         )
+        pathmap = Map((10, 5), [
+            Obstacle('SOLID', (0, 2), (10, 1)),
+        ])
+        v_map = "0000000000\n" + \
+                "0000000000\n" + \
+                "2222222222\n" + \
+                "0000000000\n" + \
+                "0000000000\n"
+        self.assertEquals(pathmap.get_grid_display(), v_map)
+        self.assertEquals([], pathmap.get_shortest_path((0, 0), (9, 4)))
 
 
 if __name__ == '__main__':

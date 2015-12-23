@@ -9,6 +9,9 @@ class Map:
     * The width and height, in metres, of the game map (In that order).
     obstacles (Obstacle Array)
     * Array of obstacles on the map
+    col_grid (numpy.array)
+    * Representation of the map wrt map coordinates numbering for a-star search.
+    * (0 - No obstacle, 1 - Obstacle)
     grid (2D Matrix)
     * Representation of the map wrt map coordinates numbering.
     * (0 - No obstacle, 1 - Impassable, 2 - Solid)
@@ -91,17 +94,18 @@ class Map:
         """
         return (b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2
 
-    def get_shortest_path(self, start, goal):
+    def get_shortest_path(self, r_start, r_goal):
         """
         Modified version of astar for our implementation of the map.
         Taken from: Christian Careaga (christian.careaga7@gmail.com) at
         http://code.activestate.com/recipes/578919-python-a-pathfinding-with-binary-heap/
-        :param start (2-tuple), Integers (x,y) starting position of path
-        :param goal  (2-tuple), Integers (x,y) ending position of path
+        :param r_start (2-list), Integers (x,y) starting position of path
+        :param r_goal  (2-list), Integers (x,y) ending position of path
         :return array, empty array if no path. Otherwise every node as (x,y) in path from start to goal.
         """
         neighbors = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]
-
+        start = tuple(r_start)
+        goal = tuple(r_goal)
         close_set = set()
         came_from = {}
         gscore = {start: 0}
@@ -119,7 +123,25 @@ class Map:
                     data.append(current)
                     current = came_from[current]
                 data.reverse()
-                return data
+                # Flatten the points, to be lines (only in eight directions)
+                delta = ()
+                flat_data = []
+                for i in range(0, len(data)):
+                    if i == 0:
+                        delta = list(a_i - b_i for a_i, b_i in zip(start, data[i]))
+                        continue
+                    else:
+                        p_delta = list(a_i - b_i for a_i, b_i in zip(data[i-1], data[i]))
+                    if p_delta == delta:
+                        continue
+                    else:
+                        flat_data.append(data[i-1])
+                        delta = p_delta
+                if not flat_data and data:
+                    flat_data = [data[-1]]
+                elif flat_data:
+                    flat_data.append(r_goal)
+                return flat_data
 
             close_set.add(current)
             for i, j in neighbors:
