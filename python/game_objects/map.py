@@ -183,17 +183,23 @@ class Map:
         """
         self.map = []
 
+        
         for obstacle in obstacles:
             corners = obstacle.to_corners_padding()
             for p in corners:
                 if self.check_point_in_map(p):
-                    self.map.append([p, []]) # linked list esque representation
+                    self.map.append(Node(p)) # linked list esque representation
         # add edges to the graph between points that are visible to one another
-        for p1, p1edges in self.map:
-            for p2, p2edges in self.map:
-                if (p1[0] == p2[0] and p1[1] == p2[1]):
+        for i, node1 in enumerate(self.map):
+            p1 = node1.point
+            p1edges = node1.neighbours
+            for j, node2 in enumerate(self.map):
+                p2 = node2.point
+                p2edges = node2.neighbours
+
+                if (i == j):
                     continue # no edge to itself
-                if p2 in p1edges:
+                if j in p1edges:
                     continue # already added a bi-directional edge from p1 to p2
                 # check if p1 and p2 are visible to one-another
                 for obstacle in obstacles:
@@ -205,15 +211,41 @@ class Map:
                     if not visible:
                         continue
                     else:
-                        p1edges.append(p2)
-                        p2edges.append(p1)
-                # we should color the connected graph components
-                # So, each node will have the same colour as all the nodes which it can reach.
-                # then if we are checking if a tank can reach another, we can see what colour nodes the tanks can reach
+                        node1.add_neighbour(j)
+                        node2.add_neighbour(i)
+        # we should color the connected graph components
+        # So, each node will have the same colour as all the nodes which it can reach.
+        # then if we are checking if a tank can reach another, we can see what colour nodes the tanks can reach
 
+        current_color = 0
+        for node in self.map:
+            if node.colour > 0:
+                continue
+            # we have a new node that has not been visited before. Make a new colour
+            current_color += 1
+            queue = []
+            for i in node.neighbours:
+                if self.map[i].colour == 0:
+                    self.map[i].colour = -1 # colour tracked nodes
+                    queue.append(i)
+                    
+            while queue: # non-empty
+                node_index = queue.pop()
+                p_node = self.map[node_index]
+                if not p_node:
+                    print("failed to find neighbour!")
+                if p_node.colour > 0:
+                    continue # visited this node and its neighbours already
+                for i in p_node.neighbours:
+                    if self.map[i].colour == 0:
+                        self.map[i].colour = -1 # colour tracked nodes
+                        queue.append(i)
+                p_node.colour = current_color
+        print("current colors: {}".format(current_color))
+                
 class Node:
     point = []
-    neighbours = []
+    neighbours = [] # index into a list of nodes
     colour = 0
 
     def __init__(self, point):
