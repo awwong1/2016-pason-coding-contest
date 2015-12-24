@@ -148,6 +148,62 @@ class TestAlgorithm(unittest.TestCase):
         # 135 degrees CW
         self.assertEquals(tank_2.get_direction_rotation_turret_to_tank(tank_1), ('CW', 2.356194490192345))
 
+    def test_line_intersect(self):
+        algo = Algorithm('testclient', 'pseudo_client_token')
+        # vertical lines, no overlap
+        self.assertFalse(algo.line_intersect(
+            [10, 10, 10, 50],
+            [20, 10, 20, 50]
+        ))
+        # vertical lines, no overlap
+        self.assertFalse(algo.line_intersect(
+            [10, 10, 10, 50],
+            [10, 60, 10, 90]
+        ))
+        # vertical overlapping all
+        self.assertTrue(algo.line_intersect(
+            [10, 10, 10, 50],
+            [10, 10, 10, 50]
+        ))
+        # vertical overlapping partial
+        self.assertTrue(algo.line_intersect(
+            [10, 10, 10, 50],
+            [10, 40, 10, 80]
+        ))
 
+        # horizontal lines, no overlap
+        self.assertFalse(algo.line_intersect(
+            [10, 10, 50, 10],
+            [10, 20, 50, 20]
+        ))
+        # no overlap
+        self.assertFalse(algo.line_intersect(
+            [10, 10, 50, 10],
+            [60, 10, 90, 10]
+        ))
+        # overlapping all
+        self.assertTrue(algo.line_intersect(
+            [10, 10, 50, 10],
+            [10, 10, 50, 10]
+        ))
+        # overlapping partial
+        self.assertTrue(algo.line_intersect(
+            [10, 10, 50, 10],
+            [40, 10, 80, 10]
+        ))
+
+        # non-parallel overlap
+        self.assertTrue(algo.line_intersect(
+            [10, 10, 20, 30],
+            [10, 30, 20, 20]
+        ))
+
+        # non-parallel no overlap
+        self.assertFalse(algo.line_intersect(
+            [10, 10, 20, 20],
+            [30, 30, 21, 21]
+        ))
+
+        
 if __name__ == '__main__':
     unittest.main()

@@ -64,6 +64,65 @@ class Algorithm:
                     Tank(id, health, hit_radius, collision_radius, type, position, tracks, turret, speed, projectiles))
             self.players.append(Player(name, score, tanks))
 
+    def line_intersect(self, line_1, line_2):
+        EPSILON = 1e-6
+        # line_1 = [x_0, y_0, x_1, y_1]
+        # https://www.topcoder.com/community/data-science/data-science-tutorials/geometry-concepts-line-intersection-and-its-applications/
+        a1 = line_1[3] - line_1[1]
+        b1 = line_1[0] - line_1[2]
+        c1 = a1 * line_1[0] + b1 * line_1[1]
+
+        a2 = line_2[3] - line_2[1]
+        b2 = line_2[0] - line_2[2]
+        c2 = a2 * line_2[0] + b2 * line_2[1]
+
+        det = a1*b2 - a2*b1
+        if (abs(det) < EPSILON): # parallel
+            # partial horizontal overlap
+            if (abs(line_1[1] - line_2[1]) < EPSILON):
+                x1 = line_2[0]
+                x2 = line_2[2]
+                if (min(line_1[0], line_1[2]) - EPSILON < x1 and
+                    max(line_1[0], line_1[2]) + EPSILON > x1):
+                    return True
+                if (min(line_1[0], line_1[2]) - EPSILON < x2 and
+                    max(line_1[0], line_1[2]) + EPSILON > x2):
+                    return True
+            # partial vertical overlap
+            if (abs(line_1[0] - line_2[0]) < EPSILON):
+                y1 = line_2[1]
+                y2 = line_2[3]
+                if ((min(line_1[1], line_1[3]) - EPSILON < y1) and
+                    (max(line_1[1], line_1[3]) + EPSILON > y1)):
+                    return True
+                if ((min(line_1[1], line_1[3]) - EPSILON < y2) and
+                    (max(line_1[1], line_1[3]) + EPSILON > y2)):
+                    return True
+            # no overlap
+            return False
+        else:
+            x = (b2*c1 - b1*c2) / det
+            y = (a1*c2 - a2*c1) / det
+
+            if (min(line_1[0], line_1[2]) - EPSILON < x and # point is on
+                max(line_1[0], line_1[2]) + EPSILON > x and # the first line
+                min(line_1[1], line_1[3]) - EPSILON < y and
+                max(line_1[1], line_1[3]) + EPSILON > y and
+                min(line_2[0], line_2[2]) - EPSILON < x and # point is on
+                max(line_2[0], line_2[2]) + EPSILON > x and # the 2nd line
+                min(line_2[1], line_2[3]) - EPSILON < y and
+                max(line_2[1], line_2[3]) + EPSILON > y):
+                return True
+            else:
+                return False
+            
+                
+
+            
+    def generate_tank_path(self, my_tank, enemy_tank, obstacles):
+        x_0, y_0 = my_tank.position
+        x_1, y_1 = enemy_tank.position
+        
     def generate_actions(self):
         actions = []
         my_player = None
