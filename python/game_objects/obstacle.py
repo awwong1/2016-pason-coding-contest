@@ -38,3 +38,45 @@ class Obstacle:
             return 0
         else:
             return 1
+        
+    def to_edges(self):
+        width, height = self.size
+        bl_corner = self.corner
+        br_corner = [bl_corner[0]+width, bl_corner[1]]
+        ul_corner = [bl_corner[0], bl_corner[1]+height]
+        ur_corner = [bl_corner[0]+width, bl_corner[1]+height]
+        edges = [bl_corner + br_corner, bl_corner + ul_corner, ul_corner + ur_corner, br_corner + ur_corner]
+        return edges
+
+    def to_corners(self):
+        width, height = self.size
+        bl_corner = self.corner
+        br_corner = [bl_corner[0]+width, bl_corner[1]]
+        ul_corner = [bl_corner[0], bl_corner[1]+height]
+        ur_corner = [bl_corner[0]+width, bl_corner[1]+height]
+        corners = [bl_corner, br_corner, ul_corner, ur_corner]
+        return corners
+    
+    def to_edges_padding(self):
+        width, height = self.size
+        bl_corner = self.corner
+        padding = 5
+        bl_corner = self.corner
+        br_corner = [bl_corner[0]+width + padding, bl_corner[1] - padding] # how big should padding be so tank doesn't hit wall
+        ul_corner = [bl_corner[0] - padding, bl_corner[1]+height + padding]
+        ur_corner = [bl_corner[0]+width + padding, bl_corner[1]+height + padding]
+        bl_corner = [bl_corner[0] - padding, bl_corner[1] - padding]
+        edges = [bl_corner + br_corner, bl_corner + ul_corner, ul_corner + ur_corner, br_corner + ur_corner]
+        return edges
+
+    def to_corners_padding(self):
+        width, height = self.size
+        bl_corner = self.corner
+        padding = 5
+        bl_corner = self.corner
+        br_corner = [bl_corner[0]+width + padding, bl_corner[1] - padding] # how big should padding be so tank doesn't hit wall
+        ul_corner = [bl_corner[0] - padding, bl_corner[1]+height + padding]
+        ur_corner = [bl_corner[0]+width + padding, bl_corner[1]+height + padding]
+        bl_corner = [bl_corner[0] - padding, bl_corner[1] - padding]
+        corners = [bl_corner, br_corner, ul_corner, ur_corner]
+        return corners

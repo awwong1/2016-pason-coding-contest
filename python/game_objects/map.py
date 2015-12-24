@@ -188,12 +188,15 @@ class Map:
             padding = 5
             # todo build a grid for all obstacles when the game is parsed like the current map function.
             # then run dfs or whatever on this grid. It should be smaller than the current one.
+            """
             bl_corner = obstacle.corner
             br_corner = [bl_corner[0]+w + padding, bl_corner[1] - padding] # how big should padding be so tank doesn't hit wall
             ul_corner = [bl_corner[0] - padding, bl_corner[1]+h + padding]
             ur_corner = [bl_corner[0]+w + padding, bl_corner[1]+h + padding]
             bl_corner = [bl_corner[0] - padding, bl_corner[1] - padding]
-            for p in [bl_corner, br_corner, ul_corner, bl_corner]:
+            """
+            corners = obstacle.to_corners_padding()
+            for p in corners:
                 if self.check_point_in_map(p):
                     self.map.append([p, []]) # linked list esque representation
         # add edges to the graph between points that are visible to one another
@@ -205,11 +208,14 @@ class Map:
                     continue # already added a bi-directional edge from p1 to p2
                 # check if p1 and p2 are visible to one-another
                 for obstacle in obstacles:
+                    """
                     bl_corner = obstacle.corner
                     br_corner = [bl_corner[0]+w, bl_corner[1]]
                     ul_corner = [bl_corner[0], bl_corner[1]+h]
                     ur_corner = [bl_corner[0]+w, bl_corner[1]+h]
                     edges = [bl_corner + br_corner, bl_corner + ul_corner, ul_corner + ur_corner, br_corner + ur_corner]
+                    """
+                    edges = obstacle.to_edges()
                     visible = True
                     for e in edges:
                         if algo.line_intersect(p1+p2, e):
@@ -222,3 +228,14 @@ class Map:
                 # we should color the connected graph components
                 # So, each node will have the same colour as all the nodes which it can reach.
                 # then if we are checking if a tank can reach another, we can see what colour nodes the tanks can reach
+
+class Node:
+    point = []
+    neighbours = []
+    colour = 0
+
+    def __init__(self, point):
+        self.point = point
+
+    def add_neighbour(self, neighbour):
+        self.neighbours.append(neighbour)
