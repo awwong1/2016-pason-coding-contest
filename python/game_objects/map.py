@@ -242,6 +242,30 @@ class Map:
                         queue.append(i)
                 p_node.colour = current_color
         print("current colors: {}".format(current_color))
+
+    def get_all_dist_node(self, tank):
+        """
+        Given a tank as a parameter, return a list of (dist, node) tuples sorted by distance increasing
+        :param tank: a tank
+        :return: [(Distance, Node)]. Empty array if no nodes
+        """
+        dists_and_nodes = []
+        if self.map:
+            for node in self.map:
+                dist = math.hypot(tank.position[0] - node.point[0], tank.position[1] - node.point[1])
+                dists_and_nodes.append((dist, node))
+        return sorted(dists_and_nodes)
+
+    def get_closest_dist_node(self, tank):
+        """
+        Given a tank as a parameter, return the closest map node.
+        :param tank:  a tank
+        :return: Distance, Node. None if no nodes.
+        """
+        dist_nodes = self.get_all_dist_node(tank)
+        if dist_nodes:
+            return dist_nodes[0]
+        return None
                 
 class Node:
     point = []

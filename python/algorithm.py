@@ -122,9 +122,18 @@ class Algorithm:
     def generate_tank_path(self, my_tank, enemy_tank, dist):
         x_0, y_0 = my_tank.position
         x_1, y_1 = enemy_tank.position
+
+        # determine what color the tanks are if there is an obstruction
+        #closest map node
+        my_node = self.map.get_closest_dist_node(my_tank) # this node should be reachable by the tank because it is the closest unobstructed point
+        enemy_node = self.map_get_closest_dist_node(enemy_tank) # same here
+        # the tanks should have the same color as these nodes
+
+        # find a path from my_node to enemy_node in self.map.map
+        
         obstacles = self.map.obstacles
         for obstacle in obstacles:
-            edges = obstacle.to_corners_padding()
+            edges = obstacle.to_edges_padding()
             for e in edges:
                 if self.line_intersect([x_0, y_0, x_1, y_1], e):
                     # drive to one of the points from the line that is obstructing the tank

@@ -72,7 +72,7 @@ class Client(object):
             try:
                 json_state_message = json.loads(raw_state_message)
                 if json_state_message[self.cmd.COMM_TYPE] == command.CommType.GAME_STATE:
-                    algo.parse_game_state(json_state_message)
+                    algo.parse_game_state(json_state_message) # this is called a lot of times, how to tell when a new game is started?
                     actions = algo.generate_actions()
                     for action in actions:
                         self.comm.send(action)
