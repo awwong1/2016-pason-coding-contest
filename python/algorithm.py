@@ -130,6 +130,7 @@ class Algorithm:
         # the tanks should have the same color as these nodes
 
         # find a path from my_node to enemy_node in self.map.map
+        # TODO implement DFS on adjacency list of self.map.map
         
         obstacles = self.map.obstacles
         for obstacle in obstacles:
