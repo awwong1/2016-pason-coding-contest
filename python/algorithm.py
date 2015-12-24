@@ -118,9 +118,39 @@ class Algorithm:
                 
 
             
-    def generate_tank_path(self, my_tank, enemy_tank, obstacles):
+    def generate_tank_path(self, my_tank, enemy_tank, dist):
         x_0, y_0 = my_tank.position
         x_1, y_1 = enemy_tank.position
+        obstacles = self.map.obstacles
+        for obstacle in obstacles:
+            # corner is closest to origin
+            # size is width and height
+            w, h = obstacle.size
+            padding = 5
+            # todo build a grid for all obstacles when the game is parsed like the current map function.
+            # then run dfs or whatever on this grid. It should be smaller than the current one.
+            bl_corner = obstacle.corner
+            br_corner = [bl_corner[0]+w + padding, bl_corner[1] - padding]
+            ul_corner = [bl_corner[0] - padding, bl_corner[1]+h + padding]
+            ur_corner = [bl_corner[0]+w + padding, bl_corner[1]+h + padding]
+            bl_corner = [bl_corner[0] - padding, bl_corner[1] - padding]
+            edges = [bl_corner + br_corner, bl_corner + ul_corner, ul_corner + ur_corner, br_corner + ur_corner]
+            for e in edges:
+                if self.line_intersect([x_0, y_0, x_1, y_1], e):
+                    # drive to one of the points from the line that is obstructing the tank
+                    point = []
+                    if (enemy_tank.get_dist_to_point([e[0], e[1]]) < enemy_tank.get_dist_to_point([e[2], e[3]])):
+                        point = [e[0], e[1]]
+                    else:
+                        point = [e[2], e[3]]
+                    # just pick the first point in the edge for now?
+                    # this isn't even gauranteed to be the closest edge
+                    tra_dir, tra_rad = my_tank.get_direction_rotation_track_to_point(point)
+                    dist = my_tank.get_dist_to_point([e[0], e[1]])
+                    return [tra_dir, tra_rad, dist]
+
+        tra_dir, tra_rad = my_tank.get_direction_rotation_track_to_tank(enemy_tank)
+        return [tra_dir, tra_rad, dist]
         
     def generate_actions(self):
         actions = []
@@ -164,9 +194,11 @@ class Algorithm:
             """
             dist, tank = my_tank.get_closest_dist_tank(enemy_player.tanks)
             tur_dir, tur_rad = my_tank.get_direction_rotation_turret_to_tank(tank)
-            tra_dir, tra_rad = my_tank.get_direction_rotation_track_to_tank(tank)
+
             actions.append(Command.get_turret_rotation_command(my_tank.id, tur_dir, tur_rad, self.client_token))
+            tra_dir, tra_rad, dist = self.generate_tank_path(my_tank, tank, dist)
             actions.append(Command.get_tank_rotation_command(my_tank.id, tra_dir, tra_rad, self.client_token))
+            # todo don't run over ally
             actions.append(Command.get_movement_command(my_tank.id, 'FWD', dist, self.client_token))
             if my_tank.no_friendly_fire(my_player.tanks, dist, tank):
                 actions.append(Command.get_fire_command(my_tank.id, self.client_token))
