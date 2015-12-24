@@ -85,6 +85,14 @@ class Tank:
         else:
             return 1
 
+    def get_dist_to_point(self, point):
+        """
+        Return the distance from the tank to the specified point.
+        :param point: 2-tuple, (x, y)
+        :return: float, value of distance
+        """
+        return math.hypot(point[0] - self.position[0], point[1] - self.position[1])
+
     def get_all_dist_tank(self, tanks):
         """
         Given the list of tanks as a parameter, return a list of (dist, tank) tuples sorted by distance increasing
@@ -92,9 +100,10 @@ class Tank:
         :return: [(Distance, Tank)]. Empty array if no tanks
         """
         dists_and_tanks = []
-        for tank in tanks:
-            dist = math.hypot(tank.position[0] - self.position[0], tank.position[1] - self.position[1])
-            dists_and_tanks.append((dist, tank))
+        if tanks:
+            for tank in tanks:
+                dist = math.hypot(tank.position[0] - self.position[0], tank.position[1] - self.position[1])
+                dists_and_tanks.append((dist, tank))
         return sorted(dists_and_tanks)
 
     def get_closest_dist_tank(self, tanks):
@@ -119,13 +128,12 @@ class Tank:
         y = tank.position[1] - self.position[1]
         return math.atan2(y, x)
 
-    def get_direction_rotation_track_to_point(self, x, y):
+    def get_direction_rotation_track_to_point(self, point):
         """
         Given the x and y value to point the track at, get the command for pointing this track to that x and y
-        :param x: x value to point tank to
-        :param y: y value to point tank to
+        :param point: (2-tuple) (x, y)
         """
-        return self.get_direction_rotation_track_to_tank(Tank('stub', 0, 0, 0, 'stub', [x, y], 0, 0, 0, []))
+        return self.get_direction_rotation_track_to_tank(Tank('stub', 0, 0, 0, 'stub', point, 0, 0, 0, []))
 
     def get_direction_rotation_turret_to_tank(self, tank):
         """
@@ -194,7 +202,7 @@ class Tank:
             ally_radius = tank.collision_radius
             # draw a line from current tank to enemy, and check if the ally is in the way
             if ((math.fabs(a * tank.position[0] + b * tank.position[1] + c) / math.sqrt(a * a + b * b)) <= (
-                    2 * ally_radius + EPSILON)):
+                            2 * ally_radius + EPSILON)):
                 dist = math.hypot(tank.position[0] - self.position[0], tank.position[1] - self.position[1])
                 if enemy_dist - EPSILON > dist:  # ally between current tank and enemy
                     return False
