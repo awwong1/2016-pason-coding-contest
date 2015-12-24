@@ -124,21 +124,7 @@ class Algorithm:
         x_1, y_1 = enemy_tank.position
         obstacles = self.map.obstacles
         for obstacle in obstacles:
-            # corner is closest to origin
-            # size is width and height
-            w, h = obstacle.size
-            padding = 5
-            # todo build a grid for all obstacles when the game is parsed like the current map function.
-            # then run dfs or whatever on this grid. It should be smaller than the current one.
-            bl_corner = obstacle.corner
-            br_corner = [bl_corner[0]+w + padding, bl_corner[1] - padding]
-            ul_corner = [bl_corner[0] - padding, bl_corner[1]+h + padding]
-            ur_corner = [bl_corner[0]+w + padding, bl_corner[1]+h + padding]
-            bl_corner = [bl_corner[0] - padding, bl_corner[1] - padding]
-            # Idea, put all points into a grid, then determine all the points that have no obstruction between them
-            # add an edge btween these points
-            # then when route planning to a tank. there should be some path in a the existing graph that we can use
-            edges = [bl_corner + br_corner, bl_corner + ul_corner, ul_corner + ur_corner, br_corner + ur_corner]
+            edges = obstacle.to_corners_padding()
             for e in edges:
                 if self.line_intersect([x_0, y_0, x_1, y_1], e):
                     # drive to one of the points from the line that is obstructing the tank

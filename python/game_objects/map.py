@@ -177,24 +177,13 @@ class Map:
             return False
         
     def parse_game_state(self, obstacles, map_size, algo):
-
+        """
+        # todo build a grid for all obstacles when the game is parsed like the current map function.
+        # then run dfs or whatever on this grid. It should be smaller than the current one.
+        """
         self.map = []
-        # map = O(obstacles * 4 * obstacles * 4) in size
-        #obstacles = self.map.obstacles
+
         for obstacle in obstacles:
-            # corner is closest to origin
-            # size is width and height
-            w, h = obstacle.size
-            padding = 5
-            # todo build a grid for all obstacles when the game is parsed like the current map function.
-            # then run dfs or whatever on this grid. It should be smaller than the current one.
-            """
-            bl_corner = obstacle.corner
-            br_corner = [bl_corner[0]+w + padding, bl_corner[1] - padding] # how big should padding be so tank doesn't hit wall
-            ul_corner = [bl_corner[0] - padding, bl_corner[1]+h + padding]
-            ur_corner = [bl_corner[0]+w + padding, bl_corner[1]+h + padding]
-            bl_corner = [bl_corner[0] - padding, bl_corner[1] - padding]
-            """
             corners = obstacle.to_corners_padding()
             for p in corners:
                 if self.check_point_in_map(p):
@@ -208,13 +197,6 @@ class Map:
                     continue # already added a bi-directional edge from p1 to p2
                 # check if p1 and p2 are visible to one-another
                 for obstacle in obstacles:
-                    """
-                    bl_corner = obstacle.corner
-                    br_corner = [bl_corner[0]+w, bl_corner[1]]
-                    ul_corner = [bl_corner[0], bl_corner[1]+h]
-                    ur_corner = [bl_corner[0]+w, bl_corner[1]+h]
-                    edges = [bl_corner + br_corner, bl_corner + ul_corner, ul_corner + ur_corner, br_corner + ur_corner]
-                    """
                     edges = obstacle.to_edges()
                     visible = True
                     for e in edges:
