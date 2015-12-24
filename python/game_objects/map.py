@@ -1,6 +1,7 @@
 import numpy
 from heapq import heappop, heappush
 
+EPSILON = 1e-6
 
 class Map:
     """
@@ -167,3 +168,57 @@ class Map:
                     heappush(oheap, (fscore[neighbor], neighbor))
 
         return []
+
+    def check_point_in_map(self, point):
+        if ((0 - EPSILON < point[0]) and (self.size[0] + EPSILON > point[0]) and
+            (0 - EPSILON < point[1]) and (self.size[1] + EPSILON > point[1])):
+            return True
+        else:
+            return False
+        
+    def parse_game_state(self, obstacles, map_size, algo):
+
+        self.map = []
+        # map = O(obstacles * 4 * obstacles * 4) in size
+        #obstacles = self.map.obstacles
+        for obstacle in obstacles:
+            # corner is closest to origin
+            # size is width and height
+            w, h = obstacle.size
+            padding = 5
+            # todo build a grid for all obstacles when the game is parsed like the current map function.
+            # then run dfs or whatever on this grid. It should be smaller than the current one.
+            bl_corner = obstacle.corner
+            br_corner = [bl_corner[0]+w + padding, bl_corner[1] - padding] # how big should padding be so tank doesn't hit wall
+            ul_corner = [bl_corner[0] - padding, bl_corner[1]+h + padding]
+            ur_corner = [bl_corner[0]+w + padding, bl_corner[1]+h + padding]
+            bl_corner = [bl_corner[0] - padding, bl_corner[1] - padding]
+            for p in [bl_corner, br_corner, ul_corner, bl_corner]:
+                if self.check_point_in_map(p):
+                    self.map.append([p, []]) # linked list esque representation
+        # add edges to the graph between points that are visible to one another
+        for p1, p1edges in self.map:
+            for p2, p2edges in self.map:
+                if (p1[0] == p2[0] and p1[1] == p2[1]):
+                    continue # no edge to itself
+                if p2 in p1edges:
+                    continue # already added a bi-directional edge from p1 to p2
+                # check if p1 and p2 are visible to one-another
+                for obstacle in obstacles:
+                    bl_corner = obstacle.corner
+                    br_corner = [bl_corner[0]+w, bl_corner[1]]
+                    ul_corner = [bl_corner[0], bl_corner[1]+h]
+                    ur_corner = [bl_corner[0]+w, bl_corner[1]+h]
+                    edges = [bl_corner + br_corner, bl_corner + ul_corner, ul_corner + ur_corner, br_corner + ur_corner]
+                    visible = True
+                    for e in edges:
+                        if algo.line_intersect(p1+p2, e):
+                            visible = False
+                    if not visible:
+                        continue
+                    else:
+                        p1edges.append(p2)
+                        p2edges.append(p1)
+                # we should color the connected graph components
+                # So, each node will have the same colour as all the nodes which it can reach.
+                # then if we are checking if a tank can reach another, we can see what colour nodes the tanks can reach
