@@ -31,7 +31,7 @@ class Algorithm:
         map_obstacles = []
         for terrain in json_game_state['map']['terrain']:
             map_obstacles.append(
-                Obstacle(terrain['type'], terrain['boundingBox']['corner'], terrain['boundingBox']['size'])
+                    Obstacle(terrain['type'], terrain['boundingBox']['corner'], terrain['boundingBox']['size'])
             )
         self.map = Map(map_size, map_obstacles)
         self.map.parse_game_state(map_obstacles, map_size, self)
@@ -61,7 +61,8 @@ class Algorithm:
                     p_range = projectile['range']
                     projectiles.append(Projectile(p_id, p_position, p_direction, p_speed, p_damage, p_range))
                 tanks.append(
-                    Tank(id, health, hit_radius, collision_radius, type, position, tracks, turret, speed, projectiles))
+                        Tank(id, health, hit_radius, collision_radius, type, position, tracks, turret, speed,
+                             projectiles))
             self.players.append(Player(name, score, tanks))
 
     def line_intersect(self, line_1, line_2):
@@ -76,62 +77,58 @@ class Algorithm:
         b2 = line_2[0] - line_2[2]
         c2 = a2 * line_2[0] + b2 * line_2[1]
 
-        det = a1*b2 - a2*b1
-        if (abs(det) < EPSILON): # parallel
+        det = a1 * b2 - a2 * b1
+        if abs(det) < EPSILON:  # parallel
             # partial horizontal overlap
-            if (abs(line_1[1] - line_2[1]) < EPSILON):
+            if abs(line_1[1] - line_2[1]) < EPSILON:
                 x1 = line_2[0]
                 x2 = line_2[2]
-                if (min(line_1[0], line_1[2]) - EPSILON < x1 and
-                    max(line_1[0], line_1[2]) + EPSILON > x1):
+                if min(line_1[0], line_1[2]) - EPSILON < x1 < EPSILON + max(line_1[0], line_1[2]):
                     return True
-                if (min(line_1[0], line_1[2]) - EPSILON < x2 and
-                    max(line_1[0], line_1[2]) + EPSILON > x2):
+                if min(line_1[0], line_1[2]) - EPSILON < x2 < EPSILON + max(line_1[0], line_1[2]):
                     return True
             # partial vertical overlap
-            if (abs(line_1[0] - line_2[0]) < EPSILON):
+            if abs(line_1[0] - line_2[0]) < EPSILON:
                 y1 = line_2[1]
                 y2 = line_2[3]
                 if ((min(line_1[1], line_1[3]) - EPSILON < y1) and
-                    (max(line_1[1], line_1[3]) + EPSILON > y1)):
+                        (max(line_1[1], line_1[3]) + EPSILON > y1)):
                     return True
                 if ((min(line_1[1], line_1[3]) - EPSILON < y2) and
-                    (max(line_1[1], line_1[3]) + EPSILON > y2)):
+                        (max(line_1[1], line_1[3]) + EPSILON > y2)):
                     return True
             # no overlap
             return False
         else:
-            x = (b2*c1 - b1*c2) / det
-            y = (a1*c2 - a2*c1) / det
+            x = (b2 * c1 - b1 * c2) / det
+            y = (a1 * c2 - a2 * c1) / det
 
-            if (min(line_1[0], line_1[2]) - EPSILON < x and # point is on
-                max(line_1[0], line_1[2]) + EPSILON > x and # the first line
-                min(line_1[1], line_1[3]) - EPSILON < y and
-                max(line_1[1], line_1[3]) + EPSILON > y and
-                min(line_2[0], line_2[2]) - EPSILON < x and # point is on
-                max(line_2[0], line_2[2]) + EPSILON > x and # the 2nd line
-                min(line_2[1], line_2[3]) - EPSILON < y and
-                max(line_2[1], line_2[3]) + EPSILON > y):
+            if (min(line_1[0], line_1[2]) - EPSILON < x and  # point is on
+                            max(line_1[0], line_1[2]) + EPSILON > x and  # the first line
+                            min(line_1[1], line_1[3]) - EPSILON < y and
+                            max(line_1[1], line_1[3]) + EPSILON > y and
+                            min(line_2[0], line_2[2]) - EPSILON < x and  # point is on
+                            max(line_2[0], line_2[2]) + EPSILON > x and  # the 2nd line
+                            min(line_2[1], line_2[3]) - EPSILON < y and
+                            max(line_2[1], line_2[3]) + EPSILON > y):
                 return True
             else:
                 return False
-            
-                
 
-            
     def generate_tank_path(self, my_tank, enemy_tank, dist):
         x_0, y_0 = my_tank.position
         x_1, y_1 = enemy_tank.position
 
         # determine what color the tanks are if there is an obstruction
-        #closest map node
-        my_node = self.map.get_closest_dist_node(my_tank) # this node should be reachable by the tank because it is the closest unobstructed point
-        enemy_node = self.map_get_closest_dist_node(enemy_tank) # same here
+        # closest map node
+        my_node = self.map.get_closest_dist_node(
+            my_tank)  # this node should be reachable by the tank because it is the closest unobstructed point
+        enemy_node = self.map.get_closest_dist_node(enemy_tank)  # same here
         # the tanks should have the same color as these nodes
 
         # find a path from my_node to enemy_node in self.map.map
         # TODO implement DFS on adjacency list of self.map.map
-        
+
         obstacles = self.map.obstacles
         for obstacle in obstacles:
             edges = obstacle.to_edges_padding()
@@ -139,7 +136,7 @@ class Algorithm:
                 if self.line_intersect([x_0, y_0, x_1, y_1], e):
                     # drive to one of the points from the line that is obstructing the tank
                     point = []
-                    if (enemy_tank.get_dist_to_point([e[0], e[1]]) < enemy_tank.get_dist_to_point([e[2], e[3]])):
+                    if enemy_tank.get_dist_to_point([e[0], e[1]]) < enemy_tank.get_dist_to_point([e[2], e[3]]):
                         point = [e[0], e[1]]
                     else:
                         point = [e[2], e[3]]
@@ -151,7 +148,7 @@ class Algorithm:
 
         tra_dir, tra_rad = my_tank.get_direction_rotation_track_to_tank(enemy_tank)
         return [tra_dir, tra_rad, dist]
-        
+
     def generate_actions(self):
         actions = []
         my_player = None

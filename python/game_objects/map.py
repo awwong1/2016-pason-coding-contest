@@ -1,7 +1,9 @@
 import numpy
+import math
 from heapq import heappop, heappush
 
 EPSILON = 1e-6
+
 
 class Map:
     """
@@ -132,11 +134,11 @@ class Map:
                         delta = list(a_i - b_i for a_i, b_i in zip(start, data[i]))
                         continue
                     else:
-                        p_delta = list(a_i - b_i for a_i, b_i in zip(data[i-1], data[i]))
+                        p_delta = list(a_i - b_i for a_i, b_i in zip(data[i - 1], data[i]))
                     if p_delta == delta:
                         continue
                     else:
-                        flat_data.append(data[i-1])
+                        flat_data.append(data[i - 1])
                         delta = p_delta
                 if not flat_data and data:
                     flat_data = [data[-1]]
@@ -171,11 +173,11 @@ class Map:
 
     def check_point_in_map(self, point):
         if ((0 - EPSILON < point[0]) and (self.size[0] + EPSILON > point[0]) and
-            (0 - EPSILON < point[1]) and (self.size[1] + EPSILON > point[1])):
+                (0 - EPSILON < point[1]) and (self.size[1] + EPSILON > point[1])):
             return True
         else:
             return False
-        
+
     def parse_game_state(self, obstacles, map_size, algo):
         """
         # todo build a grid for all obstacles when the game is parsed like the current map function.
@@ -183,12 +185,11 @@ class Map:
         """
         self.map = []
 
-        
         for obstacle in obstacles:
             corners = obstacle.to_corners_padding()
             for p in corners:
                 if self.check_point_in_map(p):
-                    self.map.append(Node(p)) # linked list esque representation
+                    self.map.append(Node(p))  # linked list esque representation
         # add edges to the graph between points that are visible to one another
         for i, node1 in enumerate(self.map):
             p1 = node1.point
@@ -198,15 +199,15 @@ class Map:
                 p2edges = node2.neighbours
 
                 if (i == j):
-                    continue # no edge to itself
+                    continue  # no edge to itself
                 if j in p1edges:
-                    continue # already added a bi-directional edge from p1 to p2
+                    continue  # already added a bi-directional edge from p1 to p2
                 # check if p1 and p2 are visible to one-another
                 for obstacle in obstacles:
                     edges = obstacle.to_edges()
                     visible = True
                     for e in edges:
-                        if algo.line_intersect(p1+p2, e):
+                        if algo.line_intersect(p1 + p2, e):
                             visible = False
                     if not visible:
                         continue
@@ -226,19 +227,19 @@ class Map:
             queue = []
             for i in node.neighbours:
                 if self.map[i].colour == 0:
-                    self.map[i].colour = -1 # colour tracked nodes
+                    self.map[i].colour = -1  # colour tracked nodes
                     queue.append(i)
-                    
-            while queue: # non-empty
+
+            while queue:  # non-empty
                 node_index = queue.pop()
                 p_node = self.map[node_index]
                 if not p_node:
                     print("failed to find neighbour!")
                 if p_node.colour > 0:
-                    continue # visited this node and its neighbours already
+                    continue  # visited this node and its neighbours already
                 for i in p_node.neighbours:
                     if self.map[i].colour == 0:
-                        self.map[i].colour = -1 # colour tracked nodes
+                        self.map[i].colour = -1  # colour tracked nodes
                         queue.append(i)
                 p_node.colour = current_color
         print("current colors: {}".format(current_color))
@@ -266,10 +267,11 @@ class Map:
         if dist_nodes:
             return dist_nodes[0]
         return None
-                
+
+
 class Node:
     point = []
-    neighbours = [] # index into a list of nodes
+    neighbours = []  # index into a list of nodes
     colour = 0
 
     def __init__(self, point):

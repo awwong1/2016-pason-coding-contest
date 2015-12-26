@@ -72,7 +72,8 @@ class Client(object):
             try:
                 json_state_message = json.loads(raw_state_message)
                 if json_state_message[self.cmd.COMM_TYPE] == command.CommType.GAME_STATE:
-                    algo.parse_game_state(json_state_message) # this is called a lot of times, how to tell when a new game is started?
+                    algo.parse_game_state(
+                        json_state_message)  # this is called a lot of times, how to tell when a new game is started?
                     actions = algo.generate_actions()
                     for action in actions:
                         self.comm.send(action)
@@ -95,7 +96,8 @@ class Client(object):
                 elif json_state_message[self.cmd.COMM_TYPE] == command.CommType.GAME_START:
                     print "Game Name: %s" % json_state_message['game_name']
                     print "Timestamp: %s" % json_state_message['timestamp']
-                    print "Game Number: %s out of %s" % (json_state_message['game_num'], json_state_message ['game_count'])
+                    print "Game Number: %s out of %s" % (
+                    json_state_message['game_num'], json_state_message['game_count'])
                     continue
                 elif json_state_message[self.cmd.COMM_TYPE] == command.CommType.GAME_END:
                     print "Game Ended! Moving onto the next game..."
