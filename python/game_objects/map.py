@@ -257,13 +257,18 @@ class Map:
         if (enemy_node.color != our_node.color):
             # the enemy tank is not reachable
             # TODO figure out what to do when this occurs
+            
         # if tank is a new tank -- find a path from our_node to enemy_node -- using Dijkstra's algorithm?
-            # store a list of the node id's
-              # while the tank is not at the first node id -- move to that node
-              # if the node is at the first id, remove it from the list and proceed to the next node on the map.
-              # if there are no more node, the tank has arrived at the enemy location
-        # if tank is an existing tank -- continue on the existing path if the enemy exists
-            # do the above
+        if (tank.path == []):
+            # store a list of the node id's on the path in the tank
+            # goto first node
+        else if (len(tank.path) > 1): # uses [-1] to denote end of path
+            # existing tank -- continue on the existing path if the enemy exists
+            # while the tank is not at the first node id -- move to that node
+            # if the node is at the first id, remove it from the list and proceed to the next node on the map.
+        else:
+            # if there are no more nodes, the tank has arrived at the enemy location
+
         
     def get_all_dist_node(self, tank):
         """

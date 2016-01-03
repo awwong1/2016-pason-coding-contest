@@ -38,6 +38,7 @@ class Tank:
     turret = None
     speed = None
     projectiles = []
+    path = [] # if path == [] it is new if path == [-1] this is the end
 
     def __init__(self, id, health, hit_radius, collision_radius, type, position, tracks, turret, speed, projectiles):
         self.id = id
