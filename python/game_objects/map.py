@@ -183,18 +183,18 @@ class Map:
         # todo build a grid for all obstacles when the game is parsed like the current map function.
         # then run dfs or whatever on this grid. It should be smaller than the current one.
         """
-        self.map = []
+        self.adjacency_list = []
 
         for obstacle in obstacles:
             corners = obstacle.to_corners_padding()
             for p in corners:
                 if self.check_point_in_map(p):
-                    self.map.append(Node(p))  # linked list esque representation
+                    self.adjacency_list.append(Node(p))  # linked list esque representation
         # add edges to the graph between points that are visible to one another
-        for i, node1 in enumerate(self.map):
+        for i, node1 in enumerate(self.adjacency_list):
             p1 = node1.point
             p1edges = node1.neighbours
-            for j, node2 in enumerate(self.map):
+            for j, node2 in enumerate(self.adjacency_list):
                 p2 = node2.point
                 p2edges = node2.neighbours
 
@@ -219,31 +219,52 @@ class Map:
         # then if we are checking if a tank can reach another, we can see what colour nodes the tanks can reach
 
         current_color = 0
-        for node in self.map:
+        for node in self.adjacency_list:
             if node.colour > 0:
                 continue
             # we have a new node that has not been visited before. Make a new colour
             current_color += 1
             queue = []
             for i in node.neighbours:
-                if self.map[i].colour == 0:
-                    self.map[i].colour = -1  # colour tracked nodes
+                if self.adjacency_list[i].colour == 0:
+                    self.adjacency_list[i].colour = -1  # colour tracked nodes
                     queue.append(i)
 
             while queue:  # non-empty
                 node_index = queue.pop()
-                p_node = self.map[node_index]
+                p_node = self.adjacency_list[node_index]
                 if not p_node:
                     print("failed to find neighbour!")
                 if p_node.colour > 0:
                     continue  # visited this node and its neighbours already
                 for i in p_node.neighbours:
-                    if self.map[i].colour == 0:
-                        self.map[i].colour = -1  # colour tracked nodes
+                    if self.adjacency_list[i].colour == 0:
+                        self.adjacency_list[i].colour = -1  # colour tracked nodes
                         queue.append(i)
                 p_node.colour = current_color
         print("current colors: {}".format(current_color))
 
+        # should this algorithm compute the shortest paths between all nodes?
+
+    def get_path(self, tank, enemy):
+        """
+        Given a tank and a target. Return the location which the tank should move to.
+        :param tank: a friendly tank
+        :param enemy: the enemy which tank is targeting
+        """
+        enemy_node = self.get_closest_dist_node(enemy)
+        our_node = self.get_closest_dist_node(tank)
+        if (enemy_node.color != our_node.color):
+            # the enemy tank is not reachable
+            # TODO figure out what to do when this occurs
+        # if tank is a new tank -- find a path from our_node to enemy_node -- using Dijkstra's algorithm?
+            # store a list of the node id's
+              # while the tank is not at the first node id -- move to that node
+              # if the node is at the first id, remove it from the list and proceed to the next node on the map.
+              # if there are no more node, the tank has arrived at the enemy location
+        # if tank is an existing tank -- continue on the existing path if the enemy exists
+            # do the above
+        
     def get_all_dist_node(self, tank):
         """
         Given a tank as a parameter, return a list of (dist, node) tuples sorted by distance increasing
