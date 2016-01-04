@@ -259,13 +259,12 @@ class Map:
         """
         # should this algorithm compute the shortest paths between all nodes?
 
-
     def dijkstra(self, adj_mat, source, dest):
 
         # based on: http://stackoverflow.com/questions/22897209/dijkstras-algorithm-in-python
         # and wikipedia: https://en.wikipedia.org/wiki/Dijkstra's_algorithm
-        prev = {node: None for node in self.node_list} #using None as +inf
-        unvisited = {node: None for node in self.node_list} #using None as +inf
+        prev = {node: None for node in self.node_list}  # using None as +inf
+        unvisited = {node: None for node in self.node_list}  # using None as +inf
         visited = {}
         current = source
         currentDistance = 0
@@ -273,9 +272,6 @@ class Map:
 
         old_current = current
         while True:
-            if not unvisited:
-                break
-            old_current = current
             for neighbour_id, neighbour_dist in enumerate(adj_mat[current]):
                 if (neighbour_dist + 0.0) < EPSILON: continue
                 if neighbour_id not in unvisited: continue
@@ -283,13 +279,11 @@ class Map:
                 if unvisited[neighbour_id] is None or unvisited[neighbour_id] > newDistance - EPSILON:
                     unvisited[neighbour_id] = newDistance
                     prev[neighbour_id] = current
-                del unvisited[current]
-                if not unvisited:
-                    break
-                candidates = [node for node in unvisited.items() if node[1]]
-                current, currentDistance = sorted(candidates, key = lambda x: x[1])[0]
-            if old_current == current:
+            del unvisited[current]
+            if not unvisited:
                 break
+            candidates = [node for node in unvisited.items() if node[1]]
+            current, currentDistance = sorted(candidates, key = lambda x: x[1])[0]
 
         path = []
         last_node = dest
@@ -320,9 +314,8 @@ class Map:
         # if tank is a new tank -- find a path from our_node to enemy_node -- using Dijkstra's algorithm?
         if (tank.path == []):
             # store a list of the node id's on the path in the tank
-            tank.path.append(our_node_id)
             path = self.dijkstra(self.adjacency_matrix, our_node_id, enemy_node_id)
-            tank.path = tank.path + path
+            tank.path = path
             print tank.path
             # goto first node
         elif (len(tank.path) > 1): # uses [-1] to denote end of path
