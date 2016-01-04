@@ -178,30 +178,42 @@ class Map:
         else:
             return False
 
+    def get_euclidean_dist(self, p1, p2):
+        dist = math.hypot(p1[0] - p2[0], p1[1] - p2[1])
+        return dist
+    
     def parse_game_state(self, obstacles, map_size, algo):
         """
         # todo build a grid for all obstacles when the game is parsed like the current map function.
         # then run dfs or whatever on this grid. It should be smaller than the current one.
         """
-        self.adjacency_list = []
+        self.node_list = [] # node ids
+        self.node_positions = [] # list of 2-element lists
+        self.adjacency_matrix = [] # value > 0.0 + EPSILON means an edge exists
 
         for obstacle in obstacles:
             corners = obstacle.to_corners_padding()
             for p in corners:
                 if self.check_point_in_map(p):
-                    self.adjacency_list.append(Node(p))  # linked list esque representation
-        # add edges to the graph between points that are visible to one another
-        for i, node1 in enumerate(self.adjacency_list):
-            p1 = node1.point
-            p1edges = node1.neighbours
-            for j, node2 in enumerate(self.adjacency_list):
-                p2 = node2.point
-                p2edges = node2.neighbours
+                    node_id = len(self.node_list)
+                    self.node_list.append(node_id)
+                    self.node_positions.append(p)
 
-                if (i == j):
+        # have all the nodes, can construct empty edge graph
+        for node_id in self.node_list:
+            self.adjacency_matrix.append([])
+            for node2_id in self.node_list:
+                self.adjacency_matrix[-1].append(0.0)
+        
+        for node_id in self.node_list:
+        # add edges to the graph between points that are visible to one another
+            p1 = self.node_positions[node_id]
+            for node2_id in self.node_list:
+                p2 = self.node_positions[node2_id]
+
+                if (node_id == node2_id):
                     continue  # no edge to itself
-                if j in p1edges:
-                    continue  # already added a bi-directional edge from p1 to p2
+
                 # check if p1 and p2 are visible to one-another
                 for obstacle in obstacles:
                     edges = obstacle.to_edges()
@@ -212,12 +224,13 @@ class Map:
                     if not visible:
                         continue
                     else:
-                        node1.add_neighbour(j)
-                        node2.add_neighbour(i)
+                        d = self.get_euclidean_dist(p1, p2)
+                        self.adjacency_matrix[node_id][node2_id] = d
+                        self.adjacency_matrix[node2_id][node_id] = d
         # we should color the connected graph components
         # So, each node will have the same colour as all the nodes which it can reach.
         # then if we are checking if a tank can reach another, we can see what colour nodes the tanks can reach
-
+        """
         current_color = 0
         for node in self.adjacency_list:
             if node.colour > 0:
@@ -243,31 +256,83 @@ class Map:
                         queue.append(i)
                 p_node.colour = current_color
         print("current colors: {}".format(current_color))
-
+        """
         # should this algorithm compute the shortest paths between all nodes?
 
+
+    def dijkstra(self, adj_mat, source, dest):
+
+        # based on: http://stackoverflow.com/questions/22897209/dijkstras-algorithm-in-python
+        # and wikipedia: https://en.wikipedia.org/wiki/Dijkstra's_algorithm
+        prev = {node: None for node in self.node_list} #using None as +inf
+        unvisited = {node: None for node in self.node_list} #using None as +inf
+        visited = {}
+        current = source
+        currentDistance = 0
+        unvisited[current] = currentDistance
+
+        old_current = current
+        while True:
+            if not unvisited:
+                break
+            old_current = current
+            for neighbour_id, neighbour_dist in enumerate(adj_mat[current]):
+                if (neighbour_dist + 0.0) < EPSILON: continue
+                if neighbour_id not in unvisited: continue
+                newDistance = currentDistance + neighbour_dist
+                if unvisited[neighbour_id] is None or unvisited[neighbour_id] > newDistance - EPSILON:
+                    unvisited[neighbour_id] = newDistance
+                    prev[neighbour_id] = current
+                del unvisited[current]
+                if not unvisited:
+                    break
+                candidates = [node for node in unvisited.items() if node[1]]
+                current, currentDistance = sorted(candidates, key = lambda x: x[1])[0]
+            if old_current == current:
+                break
+
+        path = []
+        last_node = dest
+        if prev[dest] != None:
+            path.append(dest)
+        last_node = dest
+        while prev[last_node] != None:
+            path.append(prev[last_node])
+            last_node = prev[last_node]
+        path.reverse()
+        return path
+        
     def get_path(self, tank, enemy):
         """
         Given a tank and a target. Return the location which the tank should move to.
         :param tank: a friendly tank
         :param enemy: the enemy which tank is targeting
         """
-        enemy_node = self.get_closest_dist_node(enemy)
-        our_node = self.get_closest_dist_node(tank)
+        (enemy_dist, enemy_node_id) = self.get_closest_dist_node(enemy)
+        (our_dist, our_node_id) = self.get_closest_dist_node(tank)
+        """
         if (enemy_node.color != our_node.color):
             # the enemy tank is not reachable
             # TODO figure out what to do when this occurs
-            
+            pass
+        """
+        
         # if tank is a new tank -- find a path from our_node to enemy_node -- using Dijkstra's algorithm?
         if (tank.path == []):
             # store a list of the node id's on the path in the tank
+            tank.path.append(our_node_id)
+            path = self.dijkstra(self.adjacency_matrix, our_node_id, enemy_node_id)
+            tank.path = tank.path + path
+            print tank.path
             # goto first node
-        else if (len(tank.path) > 1): # uses [-1] to denote end of path
+        elif (len(tank.path) > 1): # uses [-1] to denote end of path
             # existing tank -- continue on the existing path if the enemy exists
             # while the tank is not at the first node id -- move to that node
             # if the node is at the first id, remove it from the list and proceed to the next node on the map.
+            pass
         else:
             # if there are no more nodes, the tank has arrived at the enemy location
+            pass
 
         
     def get_all_dist_node(self, tank):
@@ -277,10 +342,11 @@ class Map:
         :return: [(Distance, Node)]. Empty array if no nodes
         """
         dists_and_nodes = []
-        if self.map:
-            for node in self.map:
-                dist = math.hypot(tank.position[0] - node.point[0], tank.position[1] - node.point[1])
-                dists_and_nodes.append((dist, node))
+        if self.node_list:
+            for node_id in self.node_list:
+                point = self.node_positions[node_id]
+                dist = math.hypot(tank.position[0] - point[0], tank.position[1] - point[1])
+                dists_and_nodes.append((dist, node_id))
         return sorted(dists_and_nodes)
 
     def get_closest_dist_node(self, tank):
@@ -296,6 +362,7 @@ class Map:
 
 
 class Node:
+    index = -1
     point = []
     neighbours = []  # index into a list of nodes
     colour = 0
@@ -305,3 +372,9 @@ class Node:
 
     def add_neighbour(self, neighbour):
         self.neighbours.append(neighbour)
+
+class Graph:
+    nodes = [] # list of node id's
+    node_coordinates = dict() # id to list
+    edges = [] # list of lists
+

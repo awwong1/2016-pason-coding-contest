@@ -51,6 +51,7 @@ class Tank:
         self.turret = turret
         self.speed = speed
         self.projectiles = projectiles
+        self.path = []
 
     def __eq__(self, other):
         basic_equality = self.id == other.id and self.health == other.health and self.hit_radius == other.hit_radius and \

@@ -192,6 +192,7 @@ class Algorithm:
             dist, tank = my_tank.get_closest_dist_tank(enemy_player.tanks)
             tur_dir, tur_rad = my_tank.get_direction_rotation_turret_to_tank(tank)
 
+            self.map.get_path(my_tank, tank)
             actions.append(Command.get_turret_rotation_command(my_tank.id, tur_dir, tur_rad, self.client_token))
             tra_dir, tra_rad, dist = self.generate_tank_path(my_tank, tank, dist)
             actions.append(Command.get_tank_rotation_command(my_tank.id, tra_dir, tra_rad, self.client_token))
