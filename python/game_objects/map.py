@@ -26,29 +26,26 @@ class Map:
         self.node_positions = []  # list of 2-element lists
         self.adjacency_matrix = []  # value > 0.0 + EPSILON means an edge exists
 
+        print("Parsing %s number of obstacles..." % str(len(obstacles)))
         for obstacle in obstacles:
-            corners = obstacle.to_corners_padding()
+            corners = obstacle.to_corners_padding(padding=1)
             for p in corners:
                 if self.check_point_in_map(p):
                     node_id = len(self.node_list)
                     self.node_list.append(node_id)
                     self.node_positions.append(p)
-
         # have all the nodes, can construct empty edge graph
         for _ in self.node_list:
             self.adjacency_matrix.append([])
             for _2 in self.node_list:
                 self.adjacency_matrix[-1].append(0.0)
-
         for node_id in self.node_list:
             # add edges to the graph between points that are visible to one another
             p1 = self.node_positions[node_id]
             for node2_id in self.node_list:
                 p2 = self.node_positions[node2_id]
-
                 if node_id == node2_id:
                     continue  # no edge to itself
-
                 # check if p1 and p2 are visible to one-another
                 for obstacle in obstacles:
                     edges = obstacle.to_edges()
@@ -121,8 +118,15 @@ class Map:
 
     @staticmethod
     def line_intersect(line_1, line_2):
-        # line_1 = [x_0, y_0, x_1, y_1]
-        # https://www.topcoder.com/community/data-science/data-science-tutorials/geometry-concepts-line-intersection-and-its-applications/
+        """
+        Determine if two lines intersect
+        https://www.topcoder.com/community/data-science/data-science-tutorials/
+        geometry-concepts-line-intersection-and-its-applications/
+
+        :param line_1: Array of four points, [x_0, y_0, x_1, y_1]
+        :param line_2: Array of four points, [x_0, y_0, x_1, y_1]
+        :return: Boolean, true if line intersects, false otherwise
+        """
         a1 = line_1[3] - line_1[1]
         b1 = line_1[0] - line_1[2]
         c1 = a1 * line_1[0] + b1 * line_1[1]
@@ -181,7 +185,6 @@ class Map:
         return math.hypot(p1[0] - p2[0], p1[1] - p2[1])
 
     def dijkstra(self, adj_mat, source, dest):
-
         # based on: http://stackoverflow.com/questions/22897209/dijkstras-algorithm-in-python
         # and wikipedia: https://en.wikipedia.org/wiki/Dijkstra's_algorithm
         prev = {node: None for node in self.node_list}  # using None as +inf

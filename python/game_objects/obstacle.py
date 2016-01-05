@@ -57,10 +57,9 @@ class Obstacle:
         corners = [bl_corner, br_corner, ul_corner, ur_corner]
         return corners
 
-    def to_edges_padding(self):
+    def to_edges_padding(self, padding=5):
         width, height = self.size
         bl_corner = self.corner
-        padding = 5
         # how big should padding be so tank doesn't hit wall
         br_corner = [bl_corner[0] + width + padding, bl_corner[1] - padding]
         ul_corner = [bl_corner[0] - padding, bl_corner[1] + height + padding]
@@ -69,10 +68,9 @@ class Obstacle:
         edges = [bl_corner + br_corner, bl_corner + ul_corner, ul_corner + ur_corner, br_corner + ur_corner]
         return edges
 
-    def to_corners_padding(self):
+    def to_corners_padding(self, padding=5):
         width, height = self.size
         bl_corner = self.corner
-        padding = 5
         # how big should padding be so tank doesn't hit wall
         br_corner = [bl_corner[0] + width + padding, bl_corner[1] - padding]
         ul_corner = [bl_corner[0] - padding, bl_corner[1] + height + padding]
