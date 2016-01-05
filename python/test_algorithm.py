@@ -154,153 +154,57 @@ class TestAlgorithm(unittest.TestCase):
         algo = Algorithm('testclient', 'pseudo_client_token')
         # vertical lines, no overlap
         self.assertFalse(algo.line_intersect(
-            [10, 10, 10, 50],
-            [20, 10, 20, 50]
+                [10, 10, 10, 50],
+                [20, 10, 20, 50]
         ))
         # vertical lines, no overlap
         self.assertFalse(algo.line_intersect(
-            [10, 10, 10, 50],
-            [10, 60, 10, 90]
+                [10, 10, 10, 50],
+                [10, 60, 10, 90]
         ))
         # vertical overlapping all
         self.assertTrue(algo.line_intersect(
-            [10, 10, 10, 50],
-            [10, 10, 10, 50]
+                [10, 10, 10, 50],
+                [10, 10, 10, 50]
         ))
         # vertical overlapping partial
         self.assertTrue(algo.line_intersect(
-            [10, 10, 10, 50],
-            [10, 40, 10, 80]
+                [10, 10, 10, 50],
+                [10, 40, 10, 80]
         ))
 
         # horizontal lines, no overlap
         self.assertFalse(algo.line_intersect(
-            [10, 10, 50, 10],
-            [10, 20, 50, 20]
+                [10, 10, 50, 10],
+                [10, 20, 50, 20]
         ))
         # no overlap
         self.assertFalse(algo.line_intersect(
-            [10, 10, 50, 10],
-            [60, 10, 90, 10]
+                [10, 10, 50, 10],
+                [60, 10, 90, 10]
         ))
         # overlapping all
         self.assertTrue(algo.line_intersect(
-            [10, 10, 50, 10],
-            [10, 10, 50, 10]
+                [10, 10, 50, 10],
+                [10, 10, 50, 10]
         ))
         # overlapping partial
         self.assertTrue(algo.line_intersect(
-            [10, 10, 50, 10],
-            [40, 10, 80, 10]
+                [10, 10, 50, 10],
+                [40, 10, 80, 10]
         ))
 
         # non-parallel overlap
         self.assertTrue(algo.line_intersect(
-            [10, 10, 20, 30],
-            [10, 30, 20, 20]
+                [10, 10, 20, 30],
+                [10, 30, 20, 20]
         ))
 
         # non-parallel no overlap
         self.assertFalse(algo.line_intersect(
-            [10, 10, 20, 20],
-            [30, 30, 21, 21]
+                [10, 10, 20, 20],
+                [30, 30, 21, 21]
         ))
-
-        
-
-    def test_map_grid_creation(self):
-        t_map = Map((10, 75), [])
-        self.assertEqual(len(t_map.grid), 10)  # X values
-        self.assertEqual(len(t_map.grid[0]), 75)  # Y values
-
-        t_map = Map(
-            (10, 50), [
-                Obstacle('SOLID', [1, 1], [3, 5]),  # Start at map (1, 1), 3 wide 5 tall
-                Obstacle('IMPASSABLE', [4, 6], [6, 20]),  # Start at map (4, 6), 6 wide 20 tall
-                Obstacle('NORMAL', [0, 4], [10, 10]),  # Ignore this, Normal obstacles are 0
-                Obstacle('SOLID', [0, 40], [30, 1])  # Start at map (0, 20), 30 wide 1 tall (test oob objects)
-            ]
-        )
-        ref_v_map = "0000000000\n" + \
-                    "0000000000\n" + \
-                    "0000000000\n" + \
-                    "0000000000\n" + \
-                    "0000000000\n" + \
-                    "0000000000\n" + \
-                    "0000000000\n" + \
-                    "0000000000\n" + \
-                    "0000000000\n" + \
-                    "2222222222\n" + \
-                    "0000000000\n" + \
-                    "0000000000\n" + \
-                    "0000000000\n" + \
-                    "0000000000\n" + \
-                    "0000000000\n" + \
-                    "0000000000\n" + \
-                    "0000000000\n" + \
-                    "0000000000\n" + \
-                    "0000000000\n" + \
-                    "0000000000\n" + \
-                    "0000000000\n" + \
-                    "0000000000\n" + \
-                    "0000000000\n" + \
-                    "0000000000\n" + \
-                    "0000111111\n" + \
-                    "0000111111\n" + \
-                    "0000111111\n" + \
-                    "0000111111\n" + \
-                    "0000111111\n" + \
-                    "0000111111\n" + \
-                    "0000111111\n" + \
-                    "0000111111\n" + \
-                    "0000111111\n" + \
-                    "0000111111\n" + \
-                    "0000111111\n" + \
-                    "0000111111\n" + \
-                    "0000111111\n" + \
-                    "0000111111\n" + \
-                    "0000111111\n" + \
-                    "0000111111\n" + \
-                    "0000111111\n" + \
-                    "0000111111\n" + \
-                    "0000111111\n" + \
-                    "0000111111\n" + \
-                    "0222000000\n" + \
-                    "0222000000\n" + \
-                    "0222000000\n" + \
-                    "0222000000\n" + \
-                    "0222000000\n" + \
-                    "0000000000\n"
-        self.assertEquals(t_map.get_grid_display(), ref_v_map)
-
-    def test_map_pathfinding(self):
-        pathmap = Map((10, 10), [])
-        self.assertEquals([(9, 9)], pathmap.get_shortest_path((0, 0), (9, 9)))
-        pathmap = Map((10, 5), [
-            Obstacle('SOLID', (0, 1), (9, 1)),
-            Obstacle('IMPASSABLE', (1, 3), (9, 1))
-        ])
-        v_map = "0000000000\n" + \
-                "0111111111\n" + \
-                "0000000000\n" + \
-                "2222222220\n" + \
-                "0000000000\n"
-        self.assertEquals(pathmap.get_grid_display(), v_map)
-        self.assertEquals(
-            [(8, 0), (9, 1), (8, 2), (1, 2), (0, 3), (1, 4), (9, 4)],
-            pathmap.get_shortest_path((0, 0), (9, 4))
-        )
-        pathmap = Map((10, 5), [
-            Obstacle('SOLID', (0, 2), (10, 1)),
-        ])
-        v_map = "0000000000\n" + \
-                "0000000000\n" + \
-                "2222222222\n" + \
-                "0000000000\n" + \
-                "0000000000\n"
-        self.assertEquals(pathmap.get_grid_display(), v_map)
-        self.assertEquals([], pathmap.get_shortest_path((0, 0), (9, 4)))
-
 
 
 if __name__ == '__main__':

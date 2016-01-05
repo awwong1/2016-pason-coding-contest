@@ -61,8 +61,8 @@ class Obstacle:
         width, height = self.size
         bl_corner = self.corner
         padding = 5
-        bl_corner = self.corner
-        br_corner = [bl_corner[0]+width + padding, bl_corner[1] - padding] # how big should padding be so tank doesn't hit wall
+        # how big should padding be so tank doesn't hit wall
+        br_corner = [bl_corner[0]+width + padding, bl_corner[1] - padding]
         ul_corner = [bl_corner[0] - padding, bl_corner[1]+height + padding]
         ur_corner = [bl_corner[0]+width + padding, bl_corner[1]+height + padding]
         bl_corner = [bl_corner[0] - padding, bl_corner[1] - padding]
@@ -73,8 +73,8 @@ class Obstacle:
         width, height = self.size
         bl_corner = self.corner
         padding = 5
-        bl_corner = self.corner
-        br_corner = [bl_corner[0]+width + padding, bl_corner[1] - padding] # how big should padding be so tank doesn't hit wall
+        # how big should padding be so tank doesn't hit wall
+        br_corner = [bl_corner[0]+width + padding, bl_corner[1] - padding]
         ul_corner = [bl_corner[0] - padding, bl_corner[1]+height + padding]
         ur_corner = [bl_corner[0]+width + padding, bl_corner[1]+height + padding]
         bl_corner = [bl_corner[0] - padding, bl_corner[1] - padding]

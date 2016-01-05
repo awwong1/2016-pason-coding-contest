@@ -23,39 +23,16 @@ class Map:
     """
     size = []
     obstacles = []
-    col_grid = numpy.array([])
-    grid = []
+    node_list = []
+    node_positions = []
+    adjacency_matrix = []
 
     def __init__(self, size, obstacles):
         self.size = size
         self.obstacles = obstacles
-
-        # Create the grid for pathfinding purposes.
-        # NOTE: If any obstacles overlap, later obstacles will overwrite newer obstacles.
-        self.col_grid = numpy.array([[0 for y in range(size[1])] for x in range(size[0])])
-        self.grid = [[0 for y in range(size[1])] for x in range(size[0])]
-        for obstacle in obstacles:
-            raw_terrain_type = obstacle.type
-            if raw_terrain_type == "NORMAL":
-                # Passable by Projectiles and Tanks, equivalent to 0
-                continue
-            elif raw_terrain_type == "IMPASSABLE":
-                terrain_type = 1
-            elif raw_terrain_type == "SOLID":
-                terrain_type = 2
-            else:
-                print "Unknown terrain type: %s" % raw_terrain_type
-                terrain_type = 9
-            origin_x, origin_y = map(int, obstacle.corner)
-            size_x, size_y = map(int, obstacle.size)
-            for writer_x in xrange(0, size_x):
-                for writer_y in xrange(0, size_y):
-                    try:
-                        self.col_grid[origin_x + writer_x][origin_y + writer_y] = 1
-                        self.grid[origin_x + writer_x][origin_y + writer_y] = terrain_type
-                    except IndexError:
-                        # Obstacles seem to be able to extend past the map
-                        pass
+        self.node_list = []  # node ids
+        self.node_positions = []  # list of 2-element lists
+        self.adjacency_matrix = []  # value > 0.0 + EPSILON means an edge exists
 
     def __eq__(self, other):
         return self.size == other.size and str(sorted(self.obstacles)) == str(sorted(other.obstacles))
@@ -79,98 +56,6 @@ class Map:
         else:
             return 1
 
-    def get_grid_display(self):
-        """
-        Get a string which represents the map as it would appear in the visualizer.
-        :return String, visualized representation of the grid
-        """
-        # http://stackoverflow.com/questions/8421337/rotating-a-two-dimensional-array-in-python
-        v_grid = ""
-        for row in zip(*zip(*zip(*self.grid[::-1])[::-1])[::-1]):
-            v_grid += "".join(map(str, row)) + "\n"
-        return v_grid
-
-    @staticmethod
-    def _heuristic(a, b):
-        """
-        Heuristic for a-star algorithm
-        """
-        return (b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2
-
-    def get_shortest_path(self, r_start, r_goal):
-        """
-        Modified version of astar for our implementation of the map.
-        Taken from: Christian Careaga (christian.careaga7@gmail.com) at
-        http://code.activestate.com/recipes/578919-python-a-pathfinding-with-binary-heap/
-        :param r_start (2-list), Integers (x,y) starting position of path
-        :param r_goal  (2-list), Integers (x,y) ending position of path
-        :return array, empty array if no path. Otherwise every node as (x,y) in path from start to goal.
-        """
-        neighbors = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]
-        start = tuple(r_start)
-        goal = tuple(r_goal)
-        close_set = set()
-        came_from = {}
-        gscore = {start: 0}
-        fscore = {start: Map._heuristic(start, goal)}
-        oheap = []
-
-        heappush(oheap, (fscore[start], start))
-
-        while oheap:
-            current = heappop(oheap)[1]
-
-            if current == goal:
-                data = []
-                while current in came_from:
-                    data.append(current)
-                    current = came_from[current]
-                data.reverse()
-                # Flatten the points, to be lines (only in eight directions)
-                delta = ()
-                flat_data = []
-                for i in range(0, len(data)):
-                    if i == 0:
-                        delta = list(a_i - b_i for a_i, b_i in zip(start, data[i]))
-                        continue
-                    else:
-                        p_delta = list(a_i - b_i for a_i, b_i in zip(data[i - 1], data[i]))
-                    if p_delta == delta:
-                        continue
-                    else:
-                        flat_data.append(data[i - 1])
-                        delta = p_delta
-                if not flat_data and data:
-                    flat_data = [data[-1]]
-                elif flat_data:
-                    flat_data.append(r_goal)
-                return flat_data
-
-            close_set.add(current)
-            for i, j in neighbors:
-                neighbor = current[0] + i, current[1] + j
-                tentative_g_score = gscore[current] + Map._heuristic(current, neighbor)
-                if 0 <= neighbor[0] < self.col_grid.shape[0]:
-                    if 0 <= neighbor[1] < self.col_grid.shape[1]:
-                        if self.col_grid[neighbor[0]][neighbor[1]] == 1:
-                            continue
-                    else:
-                        # array bound y walls
-                        continue
-                else:
-                    # array bound x walls
-                    continue
-
-                if neighbor in close_set and tentative_g_score >= gscore.get(neighbor, 0):
-                    continue
-                if tentative_g_score < gscore.get(neighbor, 0) or neighbor not in [i[1] for i in oheap]:
-                    came_from[neighbor] = current
-                    gscore[neighbor] = tentative_g_score
-                    fscore[neighbor] = tentative_g_score + Map._heuristic(neighbor, goal)
-                    heappush(oheap, (fscore[neighbor], neighbor))
-
-        return []
-
     def check_point_in_map(self, point):
         if ((0 - EPSILON < point[0]) and (self.size[0] + EPSILON > point[0]) and
                 (0 - EPSILON < point[1]) and (self.size[1] + EPSILON > point[1])):
@@ -178,18 +63,18 @@ class Map:
         else:
             return False
 
-    def get_euclidean_dist(self, p1, p2):
-        dist = math.hypot(p1[0] - p2[0], p1[1] - p2[1])
-        return dist
+    @staticmethod
+    def get_euclidean_dist(p1, p2):
+        return math.hypot(p1[0] - p2[0], p1[1] - p2[1])
 
     def parse_game_state(self, obstacles, map_size, algo):
         """
         # todo build a grid for all obstacles when the game is parsed like the current map function.
         # then run dfs or whatever on this grid. It should be smaller than the current one.
+        :param obstacles:
+        :param map_size:
+        :param algo:
         """
-        self.node_list = []  # node ids
-        self.node_positions = []  # list of 2-element lists
-        self.adjacency_matrix = []  # value > 0.0 + EPSILON means an edge exists
 
         for obstacle in obstacles:
             corners = obstacle.to_corners_padding()
@@ -211,7 +96,7 @@ class Map:
             for node2_id in self.node_list:
                 p2 = self.node_positions[node2_id]
 
-                if (node_id == node2_id):
+                if node_id == node2_id:
                     continue  # no edge to itself
 
                 # check if p1 and p2 are visible to one-another
@@ -224,7 +109,7 @@ class Map:
                     if not visible:
                         continue
                     else:
-                        d = self.get_euclidean_dist(p1, p2)
+                        d = Map.get_euclidean_dist(p1, p2)
                         self.adjacency_matrix[node_id][node2_id] = d
                         self.adjacency_matrix[node2_id][node_id] = d
         # we should color the connected graph components
@@ -266,8 +151,8 @@ class Map:
         prev = {node: None for node in self.node_list}  # using None as +inf
         unvisited = {node: None for node in self.node_list}  # using None as +inf
         current = source
-        currentDistance = 0
-        unvisited[current] = currentDistance
+        current_distance = 0
+        unvisited[current] = current_distance
 
         while True:
             for neighbour_id, neighbour_dist in enumerate(adj_mat[current]):
@@ -275,21 +160,20 @@ class Map:
                     continue
                 if neighbour_id not in unvisited:
                     continue
-                newDistance = currentDistance + neighbour_dist
-                if unvisited[neighbour_id] is None or unvisited[neighbour_id] > newDistance - EPSILON:
-                    unvisited[neighbour_id] = newDistance
+                new_distance = current_distance + neighbour_dist
+                if unvisited[neighbour_id] is None or unvisited[neighbour_id] > new_distance - EPSILON:
+                    unvisited[neighbour_id] = new_distance
                     prev[neighbour_id] = current
             del unvisited[current]
             if not unvisited:
                 break
             candidates = [node for node in unvisited.items() if node[1]]
-            current, currentDistance = sorted(candidates, key = lambda x: x[1])[0]
+            current, current_distance = sorted(candidates, key=lambda x: x[1])[0]
 
         path = []
         last_node = dest
         if prev[dest] is not None:
             path.append(dest)
-        last_node = dest
         while prev[last_node] is not None:
             path.append(prev[last_node])
             last_node = prev[last_node]
@@ -312,28 +196,28 @@ class Map:
         """
 
         # if tank is a new tank -- find a path from our_node to enemy_node -- using Dijkstra's algorithm?
-        if (tank.path == []):
+        if not tank.path:
             # store a list of the node id's on the path in the tank
             path = self.dijkstra(self.adjacency_matrix, our_node_id, enemy_node_id)
             tank.path = path
             # print tank.path
             if not path:
-                return (0, 0, 0)  # todo find new target
+                return 0, 0, 0  # todo find new target
             # goto first node
             dest_node = tank.path[0]
             dest_cord = self.node_positions[dest_node]
             tra_dir, tra_rad = tank.get_direction_rotation_track_to_point(dest_cord)
             # todo return the movement command?
             dist = tank.get_dist_to_point(dest_cord)
-            return (dist, tra_dir, tra_rad)
-        elif (len(tank.path) > 1):  # uses [-1] to denote end of path
+            return dist, tra_dir, tra_rad
+        elif len(tank.path) > 1:  # uses [-1] to denote end of path
             # existing tank -- continue on the existing path if the enemy exists
             # while the tank is not at the first node id -- move to that node
             # if the node is at the first id, remove it from the list and proceed to the next node on the map.
             dest_node = tank.path[0]
             dest_cord = self.node_positions[dest_node]
             dist = tank.get_dist_to_point(dest_cord)
-            if (dist < EPSILON):
+            if dist < EPSILON:
                 del tank.path[0]
                 # TODO check if tank.path[0] == -1, then the tank is at the node closest to the enemy
                 # otherwise drive the tank to the next node
@@ -341,13 +225,13 @@ class Map:
             else:
                 tra_dir, tra_rad = tank.get_direction_rotation_track_to_point(dest_cord)
                 # todo return the movement command?
-                return (dist, tra_dir, tra_rad)
+                return dist, tra_dir, tra_rad
         else:
             # if there are no more nodes, the tank has arrived at the node closest to the enemy location
             tra_dir, tra_rad = tank.get_direction_rotation_track_to_tank(enemy)
             # todo return the movement command?
             dist = tank.get_dist_to_point(enemy.position)
-            return (dist, tra_dir, tra_rad)
+            return dist, tra_dir, tra_rad
 
     def get_all_dist_node(self, tank):
         """
@@ -392,3 +276,6 @@ class Graph:
     nodes = []  # list of node id's
     node_coordinates = dict()  # id to list
     edges = []  # list of lists
+
+    def __init__(self):
+        pass

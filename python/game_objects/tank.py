@@ -38,14 +38,15 @@ class Tank:
     turret = None
     speed = None
     projectiles = []
-    path = [] # if path == [] it is new if path == [-1] this is the end
+    path = []  # if path == [] it is new if path == [-1] this is the end
 
-    def __init__(self, id, health, hit_radius, collision_radius, type, position, tracks, turret, speed, projectiles):
-        self.id = id
+    def __init__(self, t_id, health, hit_radius, collision_radius, t_type, position, tracks, turret, speed,
+                 projectiles):
+        self.id = t_id
         self.health = health
         self.hit_radius = hit_radius
         self.collision_radius = collision_radius
-        self.type = type
+        self.type = t_type
         self.position = position
         self.tracks = tracks
         self.turret = turret
@@ -54,9 +55,11 @@ class Tank:
         self.path = []
 
     def __eq__(self, other):
-        basic_equality = self.id == other.id and self.health == other.health and self.hit_radius == other.hit_radius and \
+        basic_equality = self.id == other.id and self.health == other.health and \
+                         self.hit_radius == other.hit_radius and \
                          self.collision_radius == other.collision_radius and self.type == other.type and \
-                         self.position == other.position and self.tracks == other.tracks and self.turret == other.turret and \
+                         self.position == other.position and self.tracks == other.tracks and \
+                         self.turret == other.turret and \
                          self.speed == other.speed
         return basic_equality and str(sorted(self.projectiles)) == str(sorted(other.projectiles))
 
@@ -198,7 +201,6 @@ class Tank:
         for tank in tanks:
             if self.id == tank.id:
                 continue  # cannot shoot self
-            rs = self.get_rads_to_tank(tank)
             # check if shooting at enemy_tank hits any allies hit circles
             # if it does hit an ally, check that the enemy is closer than the ally
             ally_radius = tank.collision_radius
