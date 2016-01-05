@@ -181,15 +181,15 @@ class Map:
     def get_euclidean_dist(self, p1, p2):
         dist = math.hypot(p1[0] - p2[0], p1[1] - p2[1])
         return dist
-    
+
     def parse_game_state(self, obstacles, map_size, algo):
         """
         # todo build a grid for all obstacles when the game is parsed like the current map function.
         # then run dfs or whatever on this grid. It should be smaller than the current one.
         """
-        self.node_list = [] # node ids
-        self.node_positions = [] # list of 2-element lists
-        self.adjacency_matrix = [] # value > 0.0 + EPSILON means an edge exists
+        self.node_list = []  # node ids
+        self.node_positions = []  # list of 2-element lists
+        self.adjacency_matrix = []  # value > 0.0 + EPSILON means an edge exists
 
         for obstacle in obstacles:
             corners = obstacle.to_corners_padding()
@@ -204,9 +204,9 @@ class Map:
             self.adjacency_matrix.append([])
             for node2_id in self.node_list:
                 self.adjacency_matrix[-1].append(0.0)
-        
+
         for node_id in self.node_list:
-        # add edges to the graph between points that are visible to one another
+            # add edges to the graph between points that are visible to one another
             p1 = self.node_positions[node_id]
             for node2_id in self.node_list:
                 p2 = self.node_positions[node2_id]
@@ -265,16 +265,16 @@ class Map:
         # and wikipedia: https://en.wikipedia.org/wiki/Dijkstra's_algorithm
         prev = {node: None for node in self.node_list}  # using None as +inf
         unvisited = {node: None for node in self.node_list}  # using None as +inf
-        visited = {}
         current = source
         currentDistance = 0
         unvisited[current] = currentDistance
 
-        old_current = current
         while True:
             for neighbour_id, neighbour_dist in enumerate(adj_mat[current]):
-                if (neighbour_dist + 0.0) < EPSILON: continue
-                if neighbour_id not in unvisited: continue
+                if (neighbour_dist + 0.0) < EPSILON:
+                    continue
+                if neighbour_id not in unvisited:
+                    continue
                 newDistance = currentDistance + neighbour_dist
                 if unvisited[neighbour_id] is None or unvisited[neighbour_id] > newDistance - EPSILON:
                     unvisited[neighbour_id] = newDistance
@@ -287,15 +287,15 @@ class Map:
 
         path = []
         last_node = dest
-        if prev[dest] != None:
+        if prev[dest] is not None:
             path.append(dest)
         last_node = dest
-        while prev[last_node] != None:
+        while prev[last_node] is not None:
             path.append(prev[last_node])
             last_node = prev[last_node]
         path.reverse()
         return path
-        
+
     def get_path(self, tank, enemy):
         """
         Given a tank and a target. Return the location which the tank should move to.
@@ -310,7 +310,7 @@ class Map:
             # TODO figure out what to do when this occurs
             pass
         """
-        
+
         # if tank is a new tank -- find a path from our_node to enemy_node -- using Dijkstra's algorithm?
         if (tank.path == []):
             # store a list of the node id's on the path in the tank
@@ -318,7 +318,7 @@ class Map:
             tank.path = path
             print tank.path
             # goto first node
-        elif (len(tank.path) > 1): # uses [-1] to denote end of path
+        elif (len(tank.path) > 1):  # uses [-1] to denote end of path
             # existing tank -- continue on the existing path if the enemy exists
             # while the tank is not at the first node id -- move to that node
             # if the node is at the first id, remove it from the list and proceed to the next node on the map.
@@ -327,7 +327,6 @@ class Map:
             # if there are no more nodes, the tank has arrived at the enemy location
             pass
 
-        
     def get_all_dist_node(self, tank):
         """
         Given a tank as a parameter, return a list of (dist, node) tuples sorted by distance increasing
@@ -366,8 +365,8 @@ class Node:
     def add_neighbour(self, neighbour):
         self.neighbours.append(neighbour)
 
-class Graph:
-    nodes = [] # list of node id's
-    node_coordinates = dict() # id to list
-    edges = [] # list of lists
 
+class Graph:
+    nodes = []  # list of node id's
+    node_coordinates = dict()  # id to list
+    edges = []  # list of lists
