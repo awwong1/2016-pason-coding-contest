@@ -53,7 +53,7 @@ class TestAlgorithm(unittest.TestCase):
         )
         json_game_state = json.loads(raw_string)
         algo = Algorithm('testclient', 'pseudo_client_token')
-        algo.parse_game_state(json_game_state)
+        algo.parse_game_state(json_game_state, parse_map=True)
         self.assertEqual(algo.time_remaining, 127.23818278312683)
         obstacles = [
             Obstacle('SOLID', [120, 200], [60, 360]),
@@ -151,57 +151,56 @@ class TestAlgorithm(unittest.TestCase):
         self.assertEquals(tank_2.get_direction_rotation_turret_to_tank(tank_1), ('CW', 2.356194490192345))
 
     def test_line_intersect(self):
-        algo = Algorithm('testclient', 'pseudo_client_token')
         # vertical lines, no overlap
-        self.assertFalse(algo.line_intersect(
+        self.assertFalse(Map.line_intersect(
                 [10, 10, 10, 50],
                 [20, 10, 20, 50]
         ))
         # vertical lines, no overlap
-        self.assertFalse(algo.line_intersect(
+        self.assertFalse(Map.line_intersect(
                 [10, 10, 10, 50],
                 [10, 60, 10, 90]
         ))
         # vertical overlapping all
-        self.assertTrue(algo.line_intersect(
+        self.assertTrue(Map.line_intersect(
                 [10, 10, 10, 50],
                 [10, 10, 10, 50]
         ))
         # vertical overlapping partial
-        self.assertTrue(algo.line_intersect(
+        self.assertTrue(Map.line_intersect(
                 [10, 10, 10, 50],
                 [10, 40, 10, 80]
         ))
 
         # horizontal lines, no overlap
-        self.assertFalse(algo.line_intersect(
+        self.assertFalse(Map.line_intersect(
                 [10, 10, 50, 10],
                 [10, 20, 50, 20]
         ))
         # no overlap
-        self.assertFalse(algo.line_intersect(
+        self.assertFalse(Map.line_intersect(
                 [10, 10, 50, 10],
                 [60, 10, 90, 10]
         ))
         # overlapping all
-        self.assertTrue(algo.line_intersect(
+        self.assertTrue(Map.line_intersect(
                 [10, 10, 50, 10],
                 [10, 10, 50, 10]
         ))
         # overlapping partial
-        self.assertTrue(algo.line_intersect(
+        self.assertTrue(Map.line_intersect(
                 [10, 10, 50, 10],
                 [40, 10, 80, 10]
         ))
 
         # non-parallel overlap
-        self.assertTrue(algo.line_intersect(
+        self.assertTrue(Map.line_intersect(
                 [10, 10, 20, 30],
                 [10, 30, 20, 20]
         ))
 
         # non-parallel no overlap
-        self.assertFalse(algo.line_intersect(
+        self.assertFalse(Map.line_intersect(
                 [10, 10, 20, 20],
                 [30, 30, 21, 21]
         ))

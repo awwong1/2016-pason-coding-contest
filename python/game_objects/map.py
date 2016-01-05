@@ -1,6 +1,5 @@
-import numpy
+import datetime
 import math
-from heapq import heappop, heappush
 
 EPSILON = 1e-6
 
@@ -11,15 +10,6 @@ class Map:
     size (Integer Tuple)
     * The width and height, in metres, of the game map (In that order).
     obstacles (Obstacle Array)
-    * Array of obstacles on the map
-    col_grid (numpy.array)
-    * Representation of the map wrt map coordinates numbering for a-star search.
-    * (0 - No obstacle, 1 - Obstacle)
-    grid (2D Matrix)
-    * Representation of the map wrt map coordinates numbering.
-    * (0 - No obstacle, 1 - Impassable, 2 - Solid)
-    * NOTES: grid[0][0] is the bottom left of the actual game map. Simply pass in your given [X] and [Y].
-      Use the 'get_grid_display' to display the map as it would appear in the visualizer. (Debugging purposes)
     """
     size = []
     obstacles = []
@@ -28,53 +18,13 @@ class Map:
     adjacency_matrix = []
 
     def __init__(self, size, obstacles):
+        print("Initializing map...")
+        m_start = datetime.datetime.now()
         self.size = size
         self.obstacles = obstacles
         self.node_list = []  # node ids
         self.node_positions = []  # list of 2-element lists
         self.adjacency_matrix = []  # value > 0.0 + EPSILON means an edge exists
-
-    def __eq__(self, other):
-        return self.size == other.size and str(sorted(self.obstacles)) == str(sorted(other.obstacles))
-
-    def __str__(self):
-        return "<Map>: %s; %s" % (str(self.size), str(self.obstacles))
-
-    def __repr__(self):
-        return "<Map>: %s; %s" % (str(self.size), str(self.obstacles))
-
-    def __hash__(self):
-        return hash(str(self))
-
-    def __cmp__(self, other):
-        a = str(self)
-        b = str(other)
-        if a < b:
-            return -1
-        elif a == b:
-            return 0
-        else:
-            return 1
-
-    def check_point_in_map(self, point):
-        if ((0 - EPSILON < point[0]) and (self.size[0] + EPSILON > point[0]) and
-                (0 - EPSILON < point[1]) and (self.size[1] + EPSILON > point[1])):
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def get_euclidean_dist(p1, p2):
-        return math.hypot(p1[0] - p2[0], p1[1] - p2[1])
-
-    def parse_game_state(self, obstacles, map_size, algo):
-        """
-        # todo build a grid for all obstacles when the game is parsed like the current map function.
-        # then run dfs or whatever on this grid. It should be smaller than the current one.
-        :param obstacles:
-        :param map_size:
-        :param algo:
-        """
 
         for obstacle in obstacles:
             corners = obstacle.to_corners_padding()
@@ -85,9 +35,9 @@ class Map:
                     self.node_positions.append(p)
 
         # have all the nodes, can construct empty edge graph
-        for node_id in self.node_list:
+        for _ in self.node_list:
             self.adjacency_matrix.append([])
-            for node2_id in self.node_list:
+            for _2 in self.node_list:
                 self.adjacency_matrix[-1].append(0.0)
 
         for node_id in self.node_list:
@@ -104,7 +54,7 @@ class Map:
                     edges = obstacle.to_edges()
                     visible = True
                     for e in edges:
-                        if algo.line_intersect(p1 + p2, e):
+                        if Map.line_intersect(p1 + p2, e):
                             visible = False
                     if not visible:
                         continue
@@ -143,6 +93,92 @@ class Map:
         print("current colors: {}".format(current_color))
         """
         # should this algorithm compute the shortest paths between all nodes?
+        m_end = datetime.datetime.now()
+        m_diff = m_end - m_start
+        print("Map initialization finished, took %s seconds" % str(m_diff.total_seconds()))
+
+    def __eq__(self, other):
+        return self.size == other.size and str(sorted(self.obstacles)) == str(sorted(other.obstacles))
+
+    def __str__(self):
+        return "<Map>: %s; %s" % (str(self.size), str(self.obstacles))
+
+    def __repr__(self):
+        return "<Map>: %s; %s" % (str(self.size), str(self.obstacles))
+
+    def __hash__(self):
+        return hash(str(self))
+
+    def __cmp__(self, other):
+        a = str(self)
+        b = str(other)
+        if a < b:
+            return -1
+        elif a == b:
+            return 0
+        else:
+            return 1
+
+    @staticmethod
+    def line_intersect(line_1, line_2):
+        # line_1 = [x_0, y_0, x_1, y_1]
+        # https://www.topcoder.com/community/data-science/data-science-tutorials/geometry-concepts-line-intersection-and-its-applications/
+        a1 = line_1[3] - line_1[1]
+        b1 = line_1[0] - line_1[2]
+        c1 = a1 * line_1[0] + b1 * line_1[1]
+
+        a2 = line_2[3] - line_2[1]
+        b2 = line_2[0] - line_2[2]
+        c2 = a2 * line_2[0] + b2 * line_2[1]
+
+        det = a1 * b2 - a2 * b1
+        if abs(det) < EPSILON:  # parallel
+            # partial horizontal overlap
+            if abs(line_1[1] - line_2[1]) < EPSILON:
+                x1 = line_2[0]
+                x2 = line_2[2]
+                if min(line_1[0], line_1[2]) - EPSILON < x1 < EPSILON + max(line_1[0], line_1[2]):
+                    return True
+                if min(line_1[0], line_1[2]) - EPSILON < x2 < EPSILON + max(line_1[0], line_1[2]):
+                    return True
+            # partial vertical overlap
+            if abs(line_1[0] - line_2[0]) < EPSILON:
+                y1 = line_2[1]
+                y2 = line_2[3]
+                if ((min(line_1[1], line_1[3]) - EPSILON < y1) and
+                        (max(line_1[1], line_1[3]) + EPSILON > y1)):
+                    return True
+                if ((min(line_1[1], line_1[3]) - EPSILON < y2) and
+                        (max(line_1[1], line_1[3]) + EPSILON > y2)):
+                    return True
+            # no overlap
+            return False
+        else:
+            x = (b2 * c1 - b1 * c2) / det
+            y = (a1 * c2 - a2 * c1) / det
+
+            if (min(line_1[0], line_1[2]) - EPSILON < x and  # point is on
+                            max(line_1[0], line_1[2]) + EPSILON > x and  # the first line
+                            min(line_1[1], line_1[3]) - EPSILON < y and
+                            max(line_1[1], line_1[3]) + EPSILON > y and
+                            min(line_2[0], line_2[2]) - EPSILON < x and  # point is on
+                            max(line_2[0], line_2[2]) + EPSILON > x and  # the 2nd line
+                            min(line_2[1], line_2[3]) - EPSILON < y and
+                            max(line_2[1], line_2[3]) + EPSILON > y):
+                return True
+            else:
+                return False
+
+    def check_point_in_map(self, point):
+        if ((0 - EPSILON < point[0]) and (self.size[0] + EPSILON > point[0]) and
+                (0 - EPSILON < point[1]) and (self.size[1] + EPSILON > point[1])):
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def get_euclidean_dist(p1, p2):
+        return math.hypot(p1[0] - p2[0], p1[1] - p2[1])
 
     def dijkstra(self, adj_mat, source, dest):
 

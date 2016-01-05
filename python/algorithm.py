@@ -22,23 +22,23 @@ class Algorithm:
         self.team_name = team_name
         self.client_token = client_token
 
-    def parse_game_state(self, json_game_state):
+    def parse_game_state(self, json_game_state, parse_map=False):
         """
         json_game_state structure
-        Populate self with the json_game_state.
+        Populate self with the json_game_state not including the map
+        :param parse_map: Boolean, value to determine whether or not the map should be reparsed
         :param json_game_state: Json object of the current game state
+
         """
         self.time_remaining = json_game_state['timeRemaining']
-        map_size = json_game_state['map']['size'][0], json_game_state['map']['size'][1]
-        map_obstacles = []
-        for terrain in json_game_state['map']['terrain']:
-            map_obstacles.append(
-                    Obstacle(terrain['type'], terrain['boundingBox']['corner'], terrain['boundingBox']['size'])
-            )
-        self.map = Map(map_size, map_obstacles)
-        print("parsing obstacles.")
-        self.map.parse_game_state(map_obstacles, map_size, self)
-        print("end parsing obstacles.")
+        if parse_map:
+            map_size = json_game_state['map']['size'][0], json_game_state['map']['size'][1]
+            map_obstacles = []
+            for terrain in json_game_state['map']['terrain']:
+                map_obstacles.append(
+                        Obstacle(terrain['type'], terrain['boundingBox']['corner'], terrain['boundingBox']['size'])
+                )
+            self.map = Map(map_size, map_obstacles)
 
         self.players = []
         for player in json_game_state['players']:
@@ -69,56 +69,6 @@ class Algorithm:
                              projectiles))
             self.players.append(Player(name, score, tanks))
 
-    @staticmethod
-    def line_intersect(line_1, line_2):
-        # line_1 = [x_0, y_0, x_1, y_1]
-        # https://www.topcoder.com/community/data-science/data-science-tutorials/geometry-concepts-line-intersection-and-its-applications/
-        a1 = line_1[3] - line_1[1]
-        b1 = line_1[0] - line_1[2]
-        c1 = a1 * line_1[0] + b1 * line_1[1]
-
-        a2 = line_2[3] - line_2[1]
-        b2 = line_2[0] - line_2[2]
-        c2 = a2 * line_2[0] + b2 * line_2[1]
-
-        det = a1 * b2 - a2 * b1
-        if abs(det) < EPSILON:  # parallel
-            # partial horizontal overlap
-            if abs(line_1[1] - line_2[1]) < EPSILON:
-                x1 = line_2[0]
-                x2 = line_2[2]
-                if min(line_1[0], line_1[2]) - EPSILON < x1 < EPSILON + max(line_1[0], line_1[2]):
-                    return True
-                if min(line_1[0], line_1[2]) - EPSILON < x2 < EPSILON + max(line_1[0], line_1[2]):
-                    return True
-            # partial vertical overlap
-            if abs(line_1[0] - line_2[0]) < EPSILON:
-                y1 = line_2[1]
-                y2 = line_2[3]
-                if ((min(line_1[1], line_1[3]) - EPSILON < y1) and
-                        (max(line_1[1], line_1[3]) + EPSILON > y1)):
-                    return True
-                if ((min(line_1[1], line_1[3]) - EPSILON < y2) and
-                        (max(line_1[1], line_1[3]) + EPSILON > y2)):
-                    return True
-            # no overlap
-            return False
-        else:
-            x = (b2 * c1 - b1 * c2) / det
-            y = (a1 * c2 - a2 * c1) / det
-
-            if (min(line_1[0], line_1[2]) - EPSILON < x and  # point is on
-                            max(line_1[0], line_1[2]) + EPSILON > x and  # the first line
-                            min(line_1[1], line_1[3]) - EPSILON < y and
-                            max(line_1[1], line_1[3]) + EPSILON > y and
-                            min(line_2[0], line_2[2]) - EPSILON < x and  # point is on
-                            max(line_2[0], line_2[2]) + EPSILON > x and  # the 2nd line
-                            min(line_2[1], line_2[3]) - EPSILON < y and
-                            max(line_2[1], line_2[3]) + EPSILON > y):
-                return True
-            else:
-                return False
-
     def generate_tank_path(self, my_tank, enemy_tank, dist):
         x_0, y_0 = my_tank.position
         x_1, y_1 = enemy_tank.position
@@ -137,7 +87,7 @@ class Algorithm:
         for obstacle in obstacles:
             edges = obstacle.to_edges_padding()
             for e in edges:
-                if self.line_intersect([x_0, y_0, x_1, y_1], e):
+                if Map.line_intersect([x_0, y_0, x_1, y_1], e):
                     # drive to one of the points from the line that is obstructing the tank
                     if enemy_tank.get_dist_to_point([e[0], e[1]]) < enemy_tank.get_dist_to_point([e[2], e[3]]):
                         point = [e[0], e[1]]
