@@ -34,7 +34,9 @@ class Algorithm:
                     Obstacle(terrain['type'], terrain['boundingBox']['corner'], terrain['boundingBox']['size'])
             )
         self.map = Map(map_size, map_obstacles)
+        print("parsing obstacles.")
         self.map.parse_game_state(map_obstacles, map_size, self)
+        print("end parsing obstacles.")
 
         self.players = []
         for player in json_game_state['players']:
@@ -193,7 +195,7 @@ class Algorithm:
             tur_dir, tur_rad = my_tank.get_direction_rotation_turret_to_tank(tank)
             tra_dir, tra_rad = my_tank.get_direction_rotation_track_to_tank(tank)
 
-            self.map.get_path(my_tank, tank)
+            dist, tra_dir, tra_rad = self.map.get_path(my_tank, tank)
             actions.append(Command.get_turret_rotation_command(my_tank.id, tur_dir, tur_rad, self.client_token))
             # tra_dir, tra_rad, dist = self.generate_tank_path(my_tank, tank, dist)  # use naive method until the pathing works
 

@@ -316,16 +316,38 @@ class Map:
             # store a list of the node id's on the path in the tank
             path = self.dijkstra(self.adjacency_matrix, our_node_id, enemy_node_id)
             tank.path = path
-            print tank.path
+            # print tank.path
+            if not path:
+                return (0, 0, 0)  # todo find new target
             # goto first node
+            dest_node = tank.path[0]
+            dest_cord = self.node_positions[dest_node]
+            tra_dir, tra_rad = tank.get_direction_rotation_track_to_point(dest_cord)
+            # todo return the movement command?
+            dist = tank.get_dist_to_point(dest_cord)
+            return (dist, tra_dir, tra_rad)
         elif (len(tank.path) > 1):  # uses [-1] to denote end of path
             # existing tank -- continue on the existing path if the enemy exists
             # while the tank is not at the first node id -- move to that node
             # if the node is at the first id, remove it from the list and proceed to the next node on the map.
-            pass
+            dest_node = tank.path[0]
+            dest_cord = self.node_positions[dest_node]
+            dist = tank.get_dist_to_point(dest_cord)
+            if (dist < EPSILON):
+                del tank.path[0]
+                # TODO check if tank.path[0] == -1, then the tank is at the node closest to the enemy
+                # otherwise drive the tank to the next node
+                return self.get_path(tank, enemy)
+            else:
+                tra_dir, tra_rad = tank.get_direction_rotation_track_to_point(dest_cord)
+                # todo return the movement command?
+                return (dist, tra_dir, tra_rad)
         else:
-            # if there are no more nodes, the tank has arrived at the enemy location
-            pass
+            # if there are no more nodes, the tank has arrived at the node closest to the enemy location
+            tra_dir, tra_rad = tank.get_direction_rotation_track_to_tank(enemy)
+            # todo return the movement command?
+            dist = tank.get_dist_to_point(enemy.position)
+            return (dist, tra_dir, tra_rad)
 
     def get_all_dist_node(self, tank):
         """
