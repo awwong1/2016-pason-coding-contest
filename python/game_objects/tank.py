@@ -38,7 +38,7 @@ class Tank:
     turret = None
     speed = None
     projectiles = []
-    path = []  # if path == [] it is new if path == [-1] this is the end
+    last_node = None
 
     def __init__(self, t_id, health, hit_radius, collision_radius, t_type, position, tracks, turret, speed,
                  projectiles):
@@ -52,7 +52,7 @@ class Tank:
         self.turret = turret
         self.speed = speed
         self.projectiles = projectiles
-        self.path = []
+        self.last_node = None
 
     def __eq__(self, other):
         basic_equality = self.id == other.id and self.health == other.health and \

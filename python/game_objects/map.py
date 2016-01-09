@@ -210,25 +210,23 @@ class Map:
         """
         (enemy_dist, enemy_node) = self.get_closest_dist_node(enemy)
         (our_dist, our_node) = self.get_closest_dist_node(tank)
-        """
-        if (enemy_node.color != our_node.color):
-            # the enemy tank is not reachable
-            # TODO figure out what to do when this occurs
-            pass
-        """
-
-        # if tank is a new tank -- find a path from our_node to enemy_node -- using Dijkstra's algorithm?
-        # if not tank.path:
-        # store a list of the node id's on the path in the tank
+        print("Tank: %s" % tank.id)
+        print(our_dist)
+        print(our_node)
         path = self.dijkstra(our_node, enemy_node)
-        tank.path = path
         if not path:
             return 0, 0, 0  # todo find new target
-        # goto first node
-        dest_node = tank.path[0]
-        dest_cord = self.nodes[dest_node]
-        tra_dir, tra_rad = tank.get_direction_rotation_track_to_point(dest_cord)
-        # todo return the movement command?
+        if tank.last_node is None:
+            # goto first node
+            dest_node = tank.path[0]
+            dest_cord = self.nodes[dest_node]
+            tra_dir, tra_rad = tank.get_direction_rotation_track_to_point(dest_cord)
+            # TODO IF WITHIN 4 METERS SET NODE VALUE IN TANK
+        else:
+            # go to next node
+            dest_node = tank.path[1]
+            dest_cord = self.nodes[dest_node]
+            tra_dir, tra_rad = tank.get_direction_rotation_track_to_point(dest_cord)
         dist = tank.get_dist_to_point(dest_cord)
         return dist, tra_dir, tra_rad
 
