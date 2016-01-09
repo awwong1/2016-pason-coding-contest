@@ -82,5 +82,11 @@ class Algorithm:
             actions.append(Command.get_turret_rotation_command(my_tank.id, tur_dir, tur_rad, self.client_token))
             actions.append(Command.get_tank_rotation_command(my_tank.id, tra_dir, tra_rad, self.client_token))
             actions.append(Command.get_movement_command(my_tank.id, 'FWD', dist, self.client_token))
-            actions.append(Command.get_fire_command(my_tank.id, self.client_token))
+
+            if my_tank.is_friendly_fire(my_player.tanks, my_tank.get_dist_to_tank(tank), tank):
+                # don't shoot friend from queued bullet
+                actions.append(Command.get_stop_command(my_tank.id, 'FIRE', self.client_token))
+            else:
+                actions.append(Command.get_fire_command(my_tank.id, self.client_token))
+            # actions.append(Command.get_fire_command(my_tank.id, self.client_token))
         return actions

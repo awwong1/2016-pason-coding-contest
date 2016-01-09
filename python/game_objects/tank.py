@@ -152,3 +152,40 @@ class Tank:
                 return 'CCW', (2 * math.pi) - rotation
             else:
                 return 'CW', rotation
+    def get_dist_to_tank(self, tank):
+        """
+        Return the distance from the tank to the specified point.
+        :param tank: tank object containing position 2-tuple
+        :return: float, value of distance
+        """
+        return math.hypot(tank.position[0] - self.position[0], tank.position[1] - self.position[1])
+
+    def is_friendly_fire(self, tanks, enemy_dist, enemy_tank):
+        """
+        Given the ally tanks and the enemy tank our current tank wants to shoot. Check that no allies are in the way
+        and return True if it is a safe shot.
+        :param tanks: Ally tanks
+        :param enemy_dist: Distance to enemy tank
+        :param enemy_tank: Enemy tank that current tank is trying to shoot
+        :return boolean
+        """
+
+        EPSILON = 1e-6
+        # http://math.stackexchange.com/questions/275529/check-if-line-intersects-with-circles-perimeter
+        a = enemy_tank.position[0] - self.position[0]
+        b = self.position[1] - enemy_tank.position[1]
+        c = a * self.position[1] + self.position[0] * b
+        for tank in tanks:
+            if self.id == tank.id:
+                continue  # cannot shoot self
+            rs = self.get_rads_to_tank(tank)
+            # check if shooting at enemy_tank hits any allies hit circles
+            # if it does hit an ally, check that the enemy is closer than the ally
+            ally_radius = tank.collision_radius
+            # draw a line from current tank to enemy, and check if the ally is in the way
+            if ((math.fabs(a * tank.position[0] + b * tank.position[1] + c) / math.sqrt(a * a + b * b)) <= (
+                            2 * ally_radius + EPSILON)):
+                dist = math.hypot(tank.position[0] - self.position[0], tank.position[1] - self.position[1])
+                if enemy_dist - EPSILON > dist:  # ally between current tank and enemy
+                    return True
+        return False
