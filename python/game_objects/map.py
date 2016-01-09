@@ -18,6 +18,9 @@ class Map:
     * NOTES: grid[0][0] is the bottom left of the actual game map. Simply pass in your given [X] and [Y].
       Use the 'get_grid_display' to display the map as it would appear in the visualizer. (Debugging purposes)
     """
+    # Setting this to 1 is pixel perfect pathing, but that's fucking slow
+    RESOLUTION = 10
+
     size = []
     obstacles = []
     col_grid = numpy.array([])
@@ -29,7 +32,8 @@ class Map:
 
         # Create the grid for pathfinding purposes.
         # NOTE: If any obstacles overlap, later obstacles will overwrite newer obstacles.
-        self.col_grid = numpy.array([[0 for y in range(size[1])] for x in range(size[0])])
+        self.col_grid = numpy.array(
+                [[0 for y in range(size[1] / Map.RESOLUTION)] for x in range(size[0] / Map.RESOLUTION)])
         self.grid = [[0 for y in range(size[1])] for x in range(size[0])]
         for obstacle in obstacles:
             raw_terrain_type = obstacle.type
@@ -48,7 +52,8 @@ class Map:
             for writer_x in xrange(0, size_x):
                 for writer_y in xrange(0, size_y):
                     try:
-                        self.col_grid[origin_x + writer_x][origin_y + writer_y] = 1
+                        if origin_x + writer_x % 10 == 0 and origin_y + writer_y % 10 == 0:
+                            self.col_grid[(origin_x + writer_x)/Map.RESOLUTION][(origin_y + writer_y)/Map.RESOLUTION] = 1
                         self.grid[origin_x + writer_x][origin_y + writer_y] = terrain_type
                     except IndexError:
                         # Obstacles seem to be able to extend past the map
@@ -104,8 +109,8 @@ class Map:
         :return array, empty array if no path. Otherwise every node as (x,y) in path from start to goal.
         """
         neighbors = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]
-        start = tuple(r_start)
-        goal = tuple(r_goal)
+        start = tuple([r_start[0]/Map.RESOLUTION, r_start[1]/Map.RESOLUTION])
+        goal = tuple([r_goal[0]/Map.RESOLUTION, r_goal[1]/Map.RESOLUTION])
         close_set = set()
         came_from = {}
         gscore = {start: 0}
@@ -131,17 +136,20 @@ class Map:
                         delta = list(a_i - b_i for a_i, b_i in zip(start, data[i]))
                         continue
                     else:
-                        p_delta = list(a_i - b_i for a_i, b_i in zip(data[i-1], data[i]))
+                        p_delta = list(a_i - b_i for a_i, b_i in zip(data[i - 1], data[i]))
                     if p_delta == delta:
                         continue
                     else:
-                        flat_data.append(data[i-1])
+                        flat_data.append(data[i - 1])
                         delta = p_delta
                 if not flat_data and data:
                     flat_data = [data[-1]]
                 elif flat_data:
                     flat_data.append(r_goal)
-                return flat_data
+                derezzed_data = []
+                for point in flat_data:
+                    derezzed_data.append((point[0]*Map.RESOLUTION, point[1]*Map.RESOLUTION))
+                return derezzed_data
 
             close_set.add(current)
             for i, j in neighbors:

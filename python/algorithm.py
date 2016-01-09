@@ -75,7 +75,6 @@ class Algorithm:
                 enemy_player = player
 
         for my_tank in my_player.tanks:
-            """
             # slooow, currently this basically doesn't run. Takes ~10-20 seconds per a-star search per tank
             print "Calculating for %s" % my_tank.id
             s_path_len = float('inf')
@@ -114,4 +113,5 @@ class Algorithm:
             else:
                 # don't shoot friend from queued bullet
                 actions.append(Command.get_stop_command(my_tank.id, CommType.FIRE, self.client_token))
+            """
         return actions

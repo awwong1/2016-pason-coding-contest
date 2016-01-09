@@ -64,3 +64,9 @@ target/
 
 # Virtual Environment
 venv/
+
+# Dev script
+cp-data.sh
+
+# AWS Key
+aws_id_rsa
