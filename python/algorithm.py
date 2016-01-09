@@ -113,15 +113,17 @@ class Algorithm:
             else:
                 enemy_player = player
 
+        naive = True
         for my_tank in my_player.tanks:
             dist, tank = my_tank.get_closest_dist_tank(enemy_player.tanks)
             tur_dir, tur_rad = my_tank.get_direction_rotation_turret_to_tank(tank)
 
-            dist, tra_dir, tra_rad = self.map.get_path(my_tank, tank)
-            actions.append(Command.get_turret_rotation_command(my_tank.id, tur_dir, tur_rad, self.client_token))
-            # tra_dir, tra_rad, dist = self.generate_tank_path(my_tank, tank, dist)
-            # use naive method until the pathing works
+            if naive:
+                tra_dir, tra_rad = my_tank.get_direction_rotation_track_to_tank(tank)
+            else:
+                dist, tra_dir, tra_rad = self.map.get_path(my_tank, tank)
 
+            actions.append(Command.get_turret_rotation_command(my_tank.id, tur_dir, tur_rad, self.client_token))
             actions.append(Command.get_tank_rotation_command(my_tank.id, tra_dir, tra_rad, self.client_token))
             # todo don't run over ally
             actions.append(Command.get_movement_command(my_tank.id, 'FWD', dist, self.client_token))

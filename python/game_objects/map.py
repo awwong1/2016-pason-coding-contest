@@ -26,7 +26,7 @@ class Map:
 
         print("Parsing %s number of obstacles..." % str(len(obstacles)))
         for obstacle in obstacles:
-            corners = obstacle.to_corners_padding(padding=1)
+            corners = obstacle.to_corners_padding(padding=5)
             for p in corners:
                 if self.check_point_in_map(p):
                     node_id = len(self.nodes)
