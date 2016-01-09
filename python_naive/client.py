@@ -66,24 +66,20 @@ class Client(object):
         print 'Received client token... %s' % self.game_info.client_token
         print 'Starting game...'
 
-        map_needs_parsing = True
-        algo = Algorithm(self.game_info.team_name, self.game_info.client_token)
         while True:
+            algo = Algorithm(self.game_info.team_name, self.game_info.client_token)
             raw_state_message = self.comm.receive(self.comm.Origin.PublishSocket)
-            algo.client_token = self.game_info.client_token
             try:
                 json_state_message = json.loads(raw_state_message)
                 if json_state_message[self.cmd.COMM_TYPE] == command.CommType.GAME_STATE:
-                    algo.parse_game_state(json_state_message, parse_map=map_needs_parsing)
-                    map_needs_parsing = False
+                    algo.parse_game_state(json_state_message)
                     actions = algo.generate_actions()
                     for action in actions:
                         self.comm.send(action)
                         """
-                        # Debugging purposes
-                        raw_command_message = ""
+                        # This never seemed to work, but actions performed fine
+                        raw_command_message = self.comm.receive(self.comm.Origin.CommandSocket)
                         try:
-                            raw_command_message = self.comm.receive(self.comm.Origin.CommandSocket)
                             json_command_message = json.loads(raw_command_message)
                             if json_command_message['resp'] == 'ok':
                                 continue
@@ -98,12 +94,10 @@ class Client(object):
                 elif json_state_message[self.cmd.COMM_TYPE] == command.CommType.GAME_START:
                     print "Game Name: %s" % json_state_message['game_name']
                     print "Timestamp: %s" % json_state_message['timestamp']
-                    print "Game Number: %s out of %s" % (
-                        json_state_message['game_num'], json_state_message ['game_count'])
+                    print "Game Number: %s out of %s" % (json_state_message['game_num'], json_state_message ['game_count'])
                     continue
                 elif json_state_message[self.cmd.COMM_TYPE] == command.CommType.GAME_END:
                     print "Game Ended! Moving onto the next game..."
-                    map_needs_parsing = True
                     continue
                 elif json_state_message[self.cmd.COMM_TYPE] == command.CommType.MATCH_END:
                     print "Match Ended!"
