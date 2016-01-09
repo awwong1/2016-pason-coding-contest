@@ -22,7 +22,6 @@ class Map:
     size = []
     obstacles = []
     col_grid = numpy.array([])
-    grid = []
 
     def __init__(self, size, obstacles):
         self.size = size
@@ -32,7 +31,6 @@ class Map:
         # NOTE: If any obstacles overlap, later obstacles will overwrite newer obstacles.
         self.col_grid = numpy.array(
                 [[0 for y in range(size[1] / Map.RESOLUTION)] for x in range(size[0] / Map.RESOLUTION)])
-        self.grid = [[0 for y in range(size[1])] for x in range(size[0])]
         for obstacle in obstacles:
             raw_terrain_type = obstacle.type
             if raw_terrain_type == "NORMAL":
@@ -52,11 +50,14 @@ class Map:
                     try:
                         self.col_grid[(origin_x + writer_x) / Map.RESOLUTION][
                             (origin_y + writer_y) / Map.RESOLUTION] = 1
-                        self.grid[origin_x + writer_x][origin_y + writer_y] = terrain_type
                     except IndexError:
                         # Obstacles seem to be able to extend past the map
                         pass
-        print self.get_mod_10_grid_display()
+        pass
+        # print self.get_mod_10_grid_display()
+        # print self.col_grid
+        # print "#" * 80
+        # print self.get_col_grid_display()
 
     def __eq__(self, other):
         return self.size == other.size and str(sorted(self.obstacles)) == str(sorted(other.obstacles))
@@ -80,26 +81,10 @@ class Map:
         else:
             return 1
 
-    def get_grid_display(self):
-        """
-        Get a string which represents the map as it would appear in the visualizer.
-        :return String, visualized representation of the grid
-        """
-        # http://stackoverflow.com/questions/8421337/rotating-a-two-dimensional-array-in-python
+    def get_col_grid_display(self):
         v_grid = ""
-        for row in zip(*zip(*zip(*self.grid[::-1])[::-1])[::-1]):
+        for row in zip(*zip(*zip(*self.col_grid[::-1])[::-1])[::-1]):
             v_grid += "".join(map(str, row)) + "\n"
-        return v_grid
-
-    def get_mod_10_grid_display(self):
-        """
-        Get a string which represents the map as it would appear in the visualizer.
-        Seems like every object on screen is 10m by 10m, so this displays it nicer and fits better in terminal stdout
-        :return: String, visualized representation of the grid
-        """
-        v_grid = ""
-        for row in zip(*zip(*zip(*self.grid[::-1])[::-1])[::-1]):
-            v_grid += "".join(map(str, row[0::10])) + "\n"
         return v_grid
 
     @staticmethod
@@ -119,8 +104,8 @@ class Map:
         :return array, empty array if no path. Otherwise every node as (x,y) in path from start to goal.
         """
         neighbors = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]
-        start = tuple(r_start)
-        goal = tuple(r_goal)
+        start = (int(r_start[0] / Map.RESOLUTION), int(r_start[1] / Map.RESOLUTION))
+        goal = (int(r_goal[0] / Map.RESOLUTION), int(r_goal[1] / Map.RESOLUTION))
         close_set = set()
         came_from = {}
         gscore = {start: 0}
@@ -135,28 +120,11 @@ class Map:
             if current == goal:
                 data = []
                 while current in came_from:
-                    data.append(current)
+                    data.append((int((current[0] * Map.RESOLUTION) + (Map.RESOLUTION / 2)),
+                                 int((current[1] * Map.RESOLUTION) + (Map.RESOLUTION / 2))))
                     current = came_from[current]
                 data.reverse()
-                # Flatten the points, to be lines (only in eight directions)
-                delta = ()
-                flat_data = []
-                for i in range(0, len(data)):
-                    if i == 0:
-                        delta = list(a_i - b_i for a_i, b_i in zip(start, data[i]))
-                        continue
-                    else:
-                        p_delta = list(a_i - b_i for a_i, b_i in zip(data[i - 1], data[i]))
-                    if p_delta == delta:
-                        continue
-                    else:
-                        flat_data.append((data[i - 1][0] * Map.RESOLUTION, data[i - 1][1] * Map.RESOLUTION))
-                        delta = p_delta
-                if not flat_data and data:
-                    flat_data = [(data[-1][0] * Map.RESOLUTION, data[-1][1] * Map.RESOLUTION), ]
-                elif flat_data:
-                    flat_data.append((r_goal[0] * Map.RESOLUTION, r_goal[1] * Map.RESOLUTION))
-                return flat_data
+                return data
 
             close_set.add(current)
             for i, j in neighbors:

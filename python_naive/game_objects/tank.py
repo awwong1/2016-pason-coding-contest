@@ -1,7 +1,5 @@
 import math
 
-EPSILON = 1e-6
-
 
 class Tank:
     """
@@ -85,45 +83,20 @@ class Tank:
         else:
             return 1
 
-    def get_dist_to_point(self, point):
-        """
-        Return the distance from the tank to the specified point.
-        :param point: 2-tuple, (x, y)
-        :return: float, value of distance
-        """
-        return math.hypot(point[0] - self.position[0], point[1] - self.position[1])
-
-    def get_dist_to_tank(self, tank):
-        """
-        Return the distance from the tank to the specified point.
-        :param tank: tank object containing position 2-tuple
-        :return: float, value of distance
-        """
-        return math.hypot(tank.position[0] - self.position[0], tank.position[1] - self.position[1])
-
-    def get_all_dist_tank(self, tanks):
-        """
-        Given the list of tanks as a parameter, return a list of (dist, tank) tuples sorted by distance increasing
-        :param tanks: List of tanks
-        :return: [(Distance, Tank)]. Empty array if no tanks
-        """
-        dists_and_tanks = []
-        if tanks:
-            for tank in tanks:
-                dist = math.hypot(tank.position[0] - self.position[0], tank.position[1] - self.position[1])
-                dists_and_tanks.append((dist, tank))
-        return sorted(dists_and_tanks)
-
-    def get_closest_dist_tank(self, tanks):
+    def get_closest_tank(self, tanks):
         """
         Given the list of tanks as a parameter, return the closest enemy tank.
         :param tanks: List of tanks
         :return: Distance, Tank. None if no tanks.
         """
-        dist_tanks = self.get_all_dist_tank(tanks)
-        if dist_tanks:
-            return dist_tanks[0]
-        return None
+        min_dist = float('inf')
+        closest_tank = None
+        for tank in tanks:
+            dist = math.hypot(tank.position[0] - self.position[0], tank.position[1] - self.position[1])
+            if dist < min_dist:
+                min_dist = dist
+                closest_tank = tank
+        return min_dist, closest_tank
 
     def get_rads_to_tank(self, tank):
         """
@@ -136,16 +109,9 @@ class Tank:
         y = tank.position[1] - self.position[1]
         return math.atan2(y, x)
 
-    def get_direction_rotation_track_to_point(self, point):
+    def get_point_turret_to_tank(self, tank):
         """
-        Given the x and y value to point the track at, get the command for pointing this track to that x and y
-        :param point: (2-tuple) (x, y)
-        """
-        return self.get_direction_rotation_track_to_tank(Tank('stub', 0, 0, 0, 'stub', point, 0, 0, 0, []))
-
-    def get_direction_rotation_turret_to_tank(self, tank):
-        """
-        Given the tank to point the turret at, get the command for pointing this turret to that tank
+        Given the tank to point the turret at, get the command for pointing this turret to that thank
         :param tank: Tank to point turret at
         """
         raw_rads = self.get_rads_to_tank(tank)
@@ -165,9 +131,9 @@ class Tank:
             else:
                 return 'CW', rotation
 
-    def get_direction_rotation_track_to_tank(self, tank):
+    def get_point_track_to_tank(self, tank):
         """
-        Given the tank to point the track at, get the command for pointing this track to that tank
+        Given the tank to point the turret at, get the command for pointing this track to that thank
         :param tank: Tank to point track at
         """
         raw_rads = self.get_rads_to_tank(tank)
@@ -186,32 +152,3 @@ class Tank:
                 return 'CCW', (2 * math.pi) - rotation
             else:
                 return 'CW', rotation
-
-    def no_friendly_fire(self, tanks, enemy_dist, enemy_tank):
-        """
-        Given the ally tanks and the enemy tank our current tank wants to shoot. Check that no allies are in the way
-        and return True if it is a safe shot.
-        :param tanks: Ally tanks
-        :param enemy_dist: Distance to enemy tank
-        :param enemy_tank: Enemy tank that current tank is trying to shoot
-        :return boolean
-        """
-
-        # http://math.stackexchange.com/questions/275529/check-if-line-intersects-with-circles-perimeter
-        a = enemy_tank.position[0] - self.position[0]
-        b = self.position[1] - enemy_tank.position[1]
-        c = a * self.position[1] + self.position[0] * b
-        for tank in tanks:
-            if self.id == tank.id:
-                continue  # cannot shoot self
-            rs = self.get_rads_to_tank(tank)
-            # check if shooting at enemy_tank hits any allies hit circles
-            # if it does hit an ally, check that the enemy is closer than the ally
-            ally_radius = tank.collision_radius
-            # draw a line from current tank to enemy, and check if the ally is in the way
-            if ((math.fabs(a * tank.position[0] + b * tank.position[1] + c) / math.sqrt(a * a + b * b)) <= (
-                            2 * ally_radius + EPSILON)):
-                dist = math.hypot(tank.position[0] - self.position[0], tank.position[1] - self.position[1])
-                if enemy_dist - EPSILON > dist:  # ally between current tank and enemy
-                    return False
-        return True
