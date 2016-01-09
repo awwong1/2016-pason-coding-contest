@@ -215,6 +215,7 @@ class Map:
         print(our_node)
         path = self.dijkstra(our_node, enemy_node)
         if not path:
+            print("Couldn't find a path.")
             return 0, 0, 0  # todo find new target
         if tank.last_node is None:
             # goto first node
@@ -236,6 +237,7 @@ class Map:
             tra_dir, tra_rad = tank.get_direction_rotation_track_to_point(dest_cord)
             if self.get_euclidean_dist(tank.position, dest_cord) < 5:
                 tank.last_node = dest_node
+
         dist = tank.get_dist_to_point(dest_cord)
         return dist, tra_dir, tra_rad
 

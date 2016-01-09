@@ -39,6 +39,7 @@ class Tank:
     speed = None
     projectiles = []
     last_node = None
+    target = None
 
     def __init__(self, t_id, health, hit_radius, collision_radius, t_type, position, tracks, turret, speed,
                  projectiles):
@@ -53,6 +54,7 @@ class Tank:
         self.speed = speed
         self.projectiles = projectiles
         self.last_node = None
+        self.target = None  # enemy tank to kill
 
     def __eq__(self, other):
         basic_equality = self.id == other.id and self.health == other.health and \
