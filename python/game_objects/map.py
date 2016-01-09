@@ -13,83 +13,53 @@ class Map:
     """
     size = []
     obstacles = []
-    node_list = []
-    node_positions = []
-    adjacency_matrix = []
+    nodes = dict()
+    adjacency_dictionary = dict()
 
     def __init__(self, size, obstacles):
         print("Initializing map...")
         m_start = datetime.datetime.now()
         self.size = size
         self.obstacles = obstacles
-        self.node_list = []  # node ids
-        self.node_positions = []  # list of 2-element lists
-        self.adjacency_matrix = []  # value > 0.0 + EPSILON means an edge exists
+        self.nodes = dict()
+        self.adjacency_dictionary = dict()
 
         print("Parsing %s number of obstacles..." % str(len(obstacles)))
         for obstacle in obstacles:
             corners = obstacle.to_corners_padding(padding=1)
             for p in corners:
                 if self.check_point_in_map(p):
-                    node_id = len(self.node_list)
-                    self.node_list.append(node_id)
-                    self.node_positions.append(p)
-        # have all the nodes, can construct empty edge graph
-        for _ in self.node_list:
-            self.adjacency_matrix.append([])
-            for _2 in self.node_list:
-                self.adjacency_matrix[-1].append(0.0)
-        for node_id in self.node_list:
+                    node_id = len(self.nodes)
+                    self.nodes[node_id] = p
+        for node_id, node in self.nodes.iteritems():
             # add edges to the graph between points that are visible to one another
-            p1 = self.node_positions[node_id]
-            for node2_id in self.node_list:
-                p2 = self.node_positions[node2_id]
+            p1 = node
+            for node2_id, node2 in self.nodes.iteritems():
+                p2 = node2
                 if node_id == node2_id:
                     continue  # no edge to itself
                 # check if p1 and p2 are visible to one-another
+                visible = True
                 for obstacle in obstacles:
                     edges = obstacle.to_edges()
-                    visible = True
                     for e in edges:
                         if Map.line_intersect(p1 + p2, e):
                             visible = False
+                            break
                     if not visible:
-                        continue
-                    else:
-                        d = Map.get_euclidean_dist(p1, p2)
-                        self.adjacency_matrix[node_id][node2_id] = d
-                        self.adjacency_matrix[node2_id][node_id] = d
-        # we should color the connected graph components
-        # So, each node will have the same colour as all the nodes which it can reach.
-        # then if we are checking if a tank can reach another, we can see what colour nodes the tanks can reach
-        """
-        current_color = 0
-        for node in self.adjacency_list:
-            if node.colour > 0:
-                continue
-            # we have a new node that has not been visited before. Make a new colour
-            current_color += 1
-            queue = []
-            for i in node.neighbours:
-                if self.adjacency_list[i].colour == 0:
-                    self.adjacency_list[i].colour = -1  # colour tracked nodes
-                    queue.append(i)
-
-            while queue:  # non-empty
-                node_index = queue.pop()
-                p_node = self.adjacency_list[node_index]
-                if not p_node:
-                    print("failed to find neighbour!")
-                if p_node.colour > 0:
-                    continue  # visited this node and its neighbours already
-                for i in p_node.neighbours:
-                    if self.adjacency_list[i].colour == 0:
-                        self.adjacency_list[i].colour = -1  # colour tracked nodes
-                        queue.append(i)
-                p_node.colour = current_color
-        print("current colors: {}".format(current_color))
-        """
-        # should this algorithm compute the shortest paths between all nodes?
+                        break
+                if visible:
+                    d = Map.get_euclidean_dist(p1, p2)
+                    if node_id not in self.adjacency_dictionary:
+                        self.adjacency_dictionary[node_id] = dict()
+                        if node2_id not in self.adjacency_dictionary[node_id]:
+                            self.adjacency_dictionary[node_id][node2_id] = dict()
+                    self.adjacency_dictionary[node_id][node2_id] = d
+                    if node2_id not in self.adjacency_dictionary:
+                        self.adjacency_dictionary[node2_id] = dict()
+                        if node_id not in self.adjacency_dictionary[node2_id]:
+                            self.adjacency_dictionary[node2_id][node_id] = dict()
+                    self.adjacency_dictionary[node2_id][node_id] = d
         m_end = datetime.datetime.now()
         m_diff = m_end - m_start
         print("Map initialization finished, took %s seconds" % str(m_diff.total_seconds()))
@@ -184,17 +154,23 @@ class Map:
     def get_euclidean_dist(p1, p2):
         return math.hypot(p1[0] - p2[0], p1[1] - p2[1])
 
-    def dijkstra(self, adj_mat, source, dest):
+    def dijkstra(self, source_node, dest_node):
         # based on: http://stackoverflow.com/questions/22897209/dijkstras-algorithm-in-python
         # and wikipedia: https://en.wikipedia.org/wiki/Dijkstra's_algorithm
-        prev = {node: None for node in self.node_list}  # using None as +inf
-        unvisited = {node: None for node in self.node_list}  # using None as +inf
-        current = source
+        prev = {node_id: None for node_id in self.nodes.keys()}
+        unvisited = {node_id: None for node_id in self.nodes.keys()}
+        current_node_id = None
+        for node_id, node in self.nodes.iteritems():
+            if node == source_node:
+                current_node_id = node_id
+                break
         current_distance = 0
-        unvisited[current] = current_distance
+        if current_node_id is None:
+            return []
+        unvisited[current_node_id] = current_distance
 
         while True:
-            for neighbour_id, neighbour_dist in enumerate(adj_mat[current]):
+            for neighbour_id, neighbour_dist in self.adjacency_dictionary[current_node_id].iteritems():
                 if (neighbour_dist + 0.0) < EPSILON:
                     continue
                 if neighbour_id not in unvisited:
@@ -202,20 +178,27 @@ class Map:
                 new_distance = current_distance + neighbour_dist
                 if unvisited[neighbour_id] is None or unvisited[neighbour_id] > new_distance - EPSILON:
                     unvisited[neighbour_id] = new_distance
-                    prev[neighbour_id] = current
-            del unvisited[current]
+                    prev[neighbour_id] = current_node_id
+            del unvisited[current_node_id]
             if not unvisited:
                 break
-            candidates = [node for node in unvisited.items() if node[1]]
-            current, current_distance = sorted(candidates, key=lambda x: x[1])[0]
+            candidates = [c_node for c_node in unvisited.iteritems() if c_node[1]]
+            if not candidates:
+                break
+            current_node_id, current_distance = sorted(candidates, key=lambda x: x[1])[0]
 
         path = []
-        last_node = dest
-        if prev[dest] is not None:
-            path.append(dest)
-        while prev[last_node] is not None:
-            path.append(prev[last_node])
-            last_node = prev[last_node]
+        last_node = dest_node
+        last_node_id = None
+        for node_id, node in self.nodes.iteritems():
+            if node == last_node:
+                last_node_id = node_id
+                break
+        if last_node_id in prev and prev[last_node_id] is not None:
+            path.append(last_node)
+        while last_node_id in prev and prev[last_node_id] is not None:
+            path.append(prev[last_node_id])
+            last_node_id = prev[last_node_id]
         path.reverse()
         return path
 
@@ -225,8 +208,8 @@ class Map:
         :param tank: a friendly tank
         :param enemy: the enemy which tank is targeting
         """
-        (enemy_dist, enemy_node_id) = self.get_closest_dist_node(enemy)
-        (our_dist, our_node_id) = self.get_closest_dist_node(tank)
+        (enemy_dist, enemy_node) = self.get_closest_dist_node(enemy)
+        (our_dist, our_node) = self.get_closest_dist_node(tank)
         """
         if (enemy_node.color != our_node.color):
             # the enemy tank is not reachable
@@ -235,42 +218,19 @@ class Map:
         """
 
         # if tank is a new tank -- find a path from our_node to enemy_node -- using Dijkstra's algorithm?
-        if not tank.path:
-            # store a list of the node id's on the path in the tank
-            path = self.dijkstra(self.adjacency_matrix, our_node_id, enemy_node_id)
-            tank.path = path
-            # print tank.path
-            if not path:
-                return 0, 0, 0  # todo find new target
-            # goto first node
-            dest_node = tank.path[0]
-            dest_cord = self.node_positions[dest_node]
-            tra_dir, tra_rad = tank.get_direction_rotation_track_to_point(dest_cord)
-            # todo return the movement command?
-            dist = tank.get_dist_to_point(dest_cord)
-            return dist, tra_dir, tra_rad
-        elif len(tank.path) > 1:  # uses [-1] to denote end of path
-            # existing tank -- continue on the existing path if the enemy exists
-            # while the tank is not at the first node id -- move to that node
-            # if the node is at the first id, remove it from the list and proceed to the next node on the map.
-            dest_node = tank.path[0]
-            dest_cord = self.node_positions[dest_node]
-            dist = tank.get_dist_to_point(dest_cord)
-            if dist < EPSILON:
-                del tank.path[0]
-                # TODO check if tank.path[0] == -1, then the tank is at the node closest to the enemy
-                # otherwise drive the tank to the next node
-                return self.get_path(tank, enemy)
-            else:
-                tra_dir, tra_rad = tank.get_direction_rotation_track_to_point(dest_cord)
-                # todo return the movement command?
-                return dist, tra_dir, tra_rad
-        else:
-            # if there are no more nodes, the tank has arrived at the node closest to the enemy location
-            tra_dir, tra_rad = tank.get_direction_rotation_track_to_tank(enemy)
-            # todo return the movement command?
-            dist = tank.get_dist_to_point(enemy.position)
-            return dist, tra_dir, tra_rad
+        # if not tank.path:
+        # store a list of the node id's on the path in the tank
+        path = self.dijkstra(our_node, enemy_node)
+        tank.path = path
+        if not path:
+            return 0, 0, 0  # todo find new target
+        # goto first node
+        dest_node = tank.path[0]
+        dest_cord = self.nodes[dest_node]
+        tra_dir, tra_rad = tank.get_direction_rotation_track_to_point(dest_cord)
+        # todo return the movement command?
+        dist = tank.get_dist_to_point(dest_cord)
+        return dist, tra_dir, tra_rad
 
     def get_all_dist_node(self, tank):
         """
@@ -279,11 +239,10 @@ class Map:
         :return: [(Distance, Node)]. Empty array if no nodes
         """
         dists_and_nodes = []
-        if self.node_list:
-            for node_id in self.node_list:
-                point = self.node_positions[node_id]
-                dist = math.hypot(tank.position[0] - point[0], tank.position[1] - point[1])
-                dists_and_nodes.append((dist, node_id))
+        if self.nodes:
+            for node_id, node in self.nodes.iteritems():
+                dist = math.hypot(tank.position[0] - node[0], tank.position[1] - node[1])
+                dists_and_nodes.append((dist, node))
         return sorted(dists_and_nodes)
 
     def get_closest_dist_node(self, tank):
@@ -296,19 +255,6 @@ class Map:
         if dist_nodes:
             return dist_nodes[0]
         return None
-
-
-class Node:
-    index = -1
-    point = []
-    neighbours = []  # index into a list of nodes
-    colour = 0
-
-    def __init__(self, point):
-        self.point = point
-
-    def add_neighbour(self, neighbour):
-        self.neighbours.append(neighbour)
 
 
 class Graph:
