@@ -18,6 +18,7 @@ class Map:
     * NOTES: grid[0][0] is the bottom left of the actual game map. Simply pass in your given [X] and [Y].
       Use the 'get_grid_display' to display the map as it would appear in the visualizer. (Debugging purposes)
     """
+    RESOLUTION = 10
     size = []
     obstacles = []
     col_grid = numpy.array([])
@@ -29,7 +30,8 @@ class Map:
 
         # Create the grid for pathfinding purposes.
         # NOTE: If any obstacles overlap, later obstacles will overwrite newer obstacles.
-        self.col_grid = numpy.array([[0 for y in range(size[1])] for x in range(size[0])])
+        self.col_grid = numpy.array(
+                [[0 for y in range(size[1] / Map.RESOLUTION)] for x in range(size[0] / Map.RESOLUTION)])
         self.grid = [[0 for y in range(size[1])] for x in range(size[0])]
         for obstacle in obstacles:
             raw_terrain_type = obstacle.type
@@ -48,11 +50,13 @@ class Map:
             for writer_x in xrange(0, size_x):
                 for writer_y in xrange(0, size_y):
                     try:
-                        self.col_grid[origin_x + writer_x][origin_y + writer_y] = 1
+                        self.col_grid[(origin_x + writer_x) / Map.RESOLUTION][
+                            (origin_y + writer_y) / Map.RESOLUTION] = 1
                         self.grid[origin_x + writer_x][origin_y + writer_y] = terrain_type
                     except IndexError:
                         # Obstacles seem to be able to extend past the map
                         pass
+        print self.get_mod_10_grid_display()
 
     def __eq__(self, other):
         return self.size == other.size and str(sorted(self.obstacles)) == str(sorted(other.obstacles))
@@ -85,6 +89,17 @@ class Map:
         v_grid = ""
         for row in zip(*zip(*zip(*self.grid[::-1])[::-1])[::-1]):
             v_grid += "".join(map(str, row)) + "\n"
+        return v_grid
+
+    def get_mod_10_grid_display(self):
+        """
+        Get a string which represents the map as it would appear in the visualizer.
+        Seems like every object on screen is 10m by 10m, so this displays it nicer and fits better in terminal stdout
+        :return: String, visualized representation of the grid
+        """
+        v_grid = ""
+        for row in zip(*zip(*zip(*self.grid[::-1])[::-1])[::-1]):
+            v_grid += "".join(map(str, row[0::10])) + "\n"
         return v_grid
 
     @staticmethod
@@ -131,16 +146,16 @@ class Map:
                         delta = list(a_i - b_i for a_i, b_i in zip(start, data[i]))
                         continue
                     else:
-                        p_delta = list(a_i - b_i for a_i, b_i in zip(data[i-1], data[i]))
+                        p_delta = list(a_i - b_i for a_i, b_i in zip(data[i - 1], data[i]))
                     if p_delta == delta:
                         continue
                     else:
-                        flat_data.append(data[i-1])
+                        flat_data.append((data[i - 1][0] * Map.RESOLUTION, data[i - 1][1] * Map.RESOLUTION))
                         delta = p_delta
                 if not flat_data and data:
-                    flat_data = [data[-1]]
+                    flat_data = [(data[-1][0] * Map.RESOLUTION, data[-1][1] * Map.RESOLUTION), ]
                 elif flat_data:
-                    flat_data.append(r_goal)
+                    flat_data.append((r_goal[0] * Map.RESOLUTION, r_goal[1] * Map.RESOLUTION))
                 return flat_data
 
             close_set.add(current)
