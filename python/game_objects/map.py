@@ -221,12 +221,21 @@ class Map:
             dest_node = tank.path[0]
             dest_cord = self.nodes[dest_node]
             tra_dir, tra_rad = tank.get_direction_rotation_track_to_point(dest_cord)
-            # TODO IF WITHIN 4 METERS SET NODE VALUE IN TANK
+            if self.get_euclidean_dist(tank.position, dest_cord) < 5:
+                tank.last_node = dest_node
         else:
-            # go to next node
-            dest_node = tank.path[1]
+            if tank.path[0] is not tank.last_node:
+                # the tank has passed the first node
+                # we recompute the path, the path no longer contains the original first node
+                dest_node = tank.path[0]
+                tank.last_node = None
+            else:
+                # go to next node
+                dest_node = tank.path[1]
             dest_cord = self.nodes[dest_node]
             tra_dir, tra_rad = tank.get_direction_rotation_track_to_point(dest_cord)
+            if self.get_euclidean_dist(tank.position, dest_cord) < 5:
+                tank.last_node = dest_node
         dist = tank.get_dist_to_point(dest_cord)
         return dist, tra_dir, tra_rad
 
